@@ -2,95 +2,121 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* PVM Digital Brand Colors - Deep Navy & Cyan */
+    --background: 210 25% 97%;
+    --foreground: 210 50% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 50% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 210 50% 10%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary: Deep Navy Blue from logo */
+    --primary: 207 79% 28%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary: Lighter navy */
+    --secondary: 210 30% 94%;
+    --secondary-foreground: 207 79% 28%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 25% 93%;
+    --muted-foreground: 210 20% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent: Cyan/Light Blue from logo */
+    --accent: 201 70% 54%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Semantic Colors for Business Logic */
+    --profit: 152 69% 40%;
+    --profit-foreground: 0 0% 100%;
+    
+    --loss: 0 72% 51%;
+    --loss-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 10%;
+    
+    --pending: 201 70% 54%;
+    --pending-foreground: 0 0% 100%;
+
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 207 79% 28%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Sidebar - Deep Navy */
+    --sidebar-background: 207 79% 18%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 201 70% 54%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 207 60% 25%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 207 50% 25%;
+    --sidebar-ring: 201 70% 54%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Chart Colors */
+    --chart-1: 207 79% 28%;
+    --chart-2: 201 70% 54%;
+    --chart-3: 152 69% 40%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 51%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 210 50% 8%;
+    --foreground: 210 20% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 210 45% 12%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 210 45% 12%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 201 70% 54%;
+    --primary-foreground: 210 50% 10%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 210 40% 18%;
+    --secondary-foreground: 210 20% 90%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 210 40% 18%;
+    --muted-foreground: 210 20% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 201 70% 54%;
+    --accent-foreground: 210 50% 10%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --profit: 152 69% 45%;
+    --profit-foreground: 0 0% 100%;
+    
+    --loss: 0 72% 55%;
+    --loss-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 10%;
+
+    --border: 210 40% 20%;
+    --input: 210 40% 20%;
+    --ring: 201 70% 54%;
+
+    --sidebar-background: 210 50% 6%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 201 70% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 210 40% 15%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 210 40% 15%;
+    --sidebar-ring: 201 70% 54%;
   }
 }
 
@@ -100,6 +126,161 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Custom scrollbar for corporate feel */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+@layer components {
+  /* KPI Card Variants */
+  .kpi-card {
+    @apply relative overflow-hidden rounded-xl border bg-card p-6 shadow-sm transition-all duration-200 hover:shadow-md;
+  }
+
+  .kpi-card-profit {
+    @apply kpi-card;
+    border-left: 4px solid hsl(var(--profit));
+  }
+
+  .kpi-card-loss {
+    @apply kpi-card;
+    border-left: 4px solid hsl(var(--loss));
+  }
+
+  .kpi-card-warning {
+    @apply kpi-card;
+    border-left: 4px solid hsl(var(--warning));
+  }
+
+  .kpi-card-neutral {
+    @apply kpi-card;
+    border-left: 4px solid hsl(var(--primary));
+  }
+
+  /* Status badges */
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .status-on-time {
+    @apply status-badge;
+    background-color: hsl(var(--profit) / 0.1);
+    color: hsl(var(--profit));
+  }
+
+  .status-late {
+    @apply status-badge;
+    background-color: hsl(var(--loss) / 0.1);
+    color: hsl(var(--loss));
+  }
+
+  .status-waiting {
+    @apply status-badge;
+    background-color: hsl(var(--warning) / 0.1);
+    color: hsl(var(--warning));
+  }
+
+  .status-pending {
+    @apply status-badge;
+    background-color: hsl(var(--pending) / 0.1);
+    color: hsl(var(--pending));
+  }
+
+  /* Data table row states */
+  .table-row-late {
+    background-color: hsl(var(--loss) / 0.05);
+  }
+  
+  .table-row-late:hover {
+    background-color: hsl(var(--loss) / 0.1);
+  }
+
+  .table-row-warning {
+    background-color: hsl(var(--warning) / 0.05);
+  }
+  
+  .table-row-warning:hover {
+    background-color: hsl(var(--warning) / 0.1);
+  }
+
+  /* Progress bar variants */
+  .progress-profit {
+    background-color: hsl(var(--profit));
+  }
+
+  .progress-loss {
+    background-color: hsl(var(--loss));
+  }
+
+  .progress-warning {
+    background-color: hsl(var(--warning));
+  }
+}
+
+@layer utilities {
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(207 79% 28%) 0%, hsl(201 70% 54%) 100%);
+  }
+
+  .gradient-profit {
+    background: linear-gradient(135deg, hsl(152 69% 40%) 0%, hsl(152 69% 50%) 100%);
+  }
+
+  .gradient-loss {
+    background: linear-gradient(135deg, hsl(0 72% 51%) 0%, hsl(0 72% 61%) 100%);
+  }
+
+  /* Subtle shadows for cards */
+  .shadow-card {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  }
+
+  .shadow-card-hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  }
+
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
