@@ -5,23 +5,75 @@ import { ClientProfitability } from "@/components/dashboard/ClientProfitability"
 import { TasksOverview } from "@/components/dashboard/TasksOverview";
 import { DREMini } from "@/components/dashboard/DREMini";
 import { DollarSign, TrendingUp, Users, Clock, AlertTriangle, Target } from "lucide-react";
+import { useClients } from "@/hooks/useClients";
+import { useOrganization } from "@/contexts/OrganizationContext";
+
 const Index = () => {
-  return <MainLayout>
+  const { clients, isLoading } = useClients();
+  const { organization } = useOrganization();
+
+  // Calculate stats from real data
+  const activeClients = clients.filter(
+    (c) => !c.contrato_fim || new Date(c.contrato_fim) >= new Date()
+  ).length;
+
+  const totalRevenue = clients.reduce((acc, c) => acc + (c.fee_mensal_centavos || 0), 0);
+
+  return (
+    <MainLayout>
       <div className="p-6 lg:p-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight">Dashboard Executivo</h1>
-          <p className="text-muted-foreground">Janeiro 2026 </p>
+          <p className="text-muted-foreground">
+            {organization?.name || "Sua Agência"} - Janeiro 2026
+          </p>
         </div>
 
         {/* KPI Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <KPICard title="Receita Líquida" value="R$ 115.000" subtitle="Meta: R$ 120.000" change={8.5} changeLabel="vs mês anterior" icon={DollarSign} variant="neutral" />
-          <KPICard title="Lucro Líquido" value="R$ 34.250" subtitle="Margem: 29,8%" change={12.3} changeLabel="vs mês anterior" icon={TrendingUp} variant="profit" />
-          <KPICard title="Clientes Ativos" value="12" subtitle="2 em risco de churn" change={-8} changeLabel="vs mês anterior" icon={Users} variant="warning" />
-          <KPICard title="Horas Vendidas" value="480h" subtitle="Realizadas: 520h" icon={Clock} variant="loss" />
-          <KPICard title="Tarefas Atrasadas" value="7" subtitle="de 84 ativas" icon={AlertTriangle} variant="loss" />
-          <KPICard title="Pipeline CRM" value="R$ 45.000" subtitle="3 propostas abertas" change={25} changeLabel="vs mês anterior" icon={Target} variant="neutral" />
+          <KPICard
+            title="Receita Mensal"
+            value={isLoading ? "..." : `R$ ${(totalRevenue / 100).toLocaleString("pt-BR")}`}
+            subtitle="Fee dos clientes"
+            icon={DollarSign}
+            variant="neutral"
+          />
+          <KPICard
+            title="Lucro Líquido"
+            value="--"
+            subtitle="Fase 2: Financeiro"
+            icon={TrendingUp}
+            variant="neutral"
+          />
+          <KPICard
+            title="Clientes Ativos"
+            value={isLoading ? "..." : String(activeClients)}
+            subtitle={`de ${clients.length} cadastrados`}
+            icon={Users}
+            variant={activeClients > 0 ? "profit" : "neutral"}
+          />
+          <KPICard
+            title="Horas Vendidas"
+            value="--"
+            subtitle="Fase 2: Timesheet"
+            icon={Clock}
+            variant="neutral"
+          />
+          <KPICard
+            title="Tarefas Atrasadas"
+            value="--"
+            subtitle="Fase 2: Bíblia"
+            icon={AlertTriangle}
+            variant="neutral"
+          />
+          <KPICard
+            title="Pipeline CRM"
+            value="--"
+            subtitle="Fase 2: CRM"
+            icon={Target}
+            variant="neutral"
+          />
         </div>
 
         {/* Charts Row */}
@@ -36,6 +88,8 @@ const Index = () => {
           <DREMini />
         </div>
       </div>
-    </MainLayout>;
+    </MainLayout>
+  );
 };
+
 export default Index;
