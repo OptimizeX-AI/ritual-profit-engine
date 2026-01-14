@@ -52,6 +52,56 @@ export type Database = {
           },
         ]
       }
+      deals: {
+        Row: {
+          company: string
+          contact: string | null
+          created_at: string
+          days_in_stage: number
+          id: string
+          notes: string | null
+          organization_id: string
+          probability: number
+          stage: string
+          updated_at: string
+          value_centavos: number
+        }
+        Insert: {
+          company: string
+          contact?: string | null
+          created_at?: string
+          days_in_stage?: number
+          id?: string
+          notes?: string | null
+          organization_id: string
+          probability?: number
+          stage?: string
+          updated_at?: string
+          value_centavos?: number
+        }
+        Update: {
+          company?: string
+          contact?: string | null
+          created_at?: string
+          days_in_stage?: number
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          probability?: number
+          stage?: string
+          updated_at?: string
+          value_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
@@ -130,6 +180,143 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          assignee_id: string | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          estimated_time_minutes: number
+          id: string
+          organization_id: string
+          project_id: string | null
+          status: string
+          time_spent_minutes: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          estimated_time_minutes?: number
+          id?: string
+          organization_id: string
+          project_id?: string | null
+          status?: string
+          time_spent_minutes?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          estimated_time_minutes?: number
+          id?: string
+          organization_id?: string
+          project_id?: string | null
+          status?: string
+          time_spent_minutes?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          category: string
+          created_at: string
+          date: string
+          description: string
+          id: string
+          is_repasse: boolean
+          notes: string | null
+          organization_id: string
+          project_id: string | null
+          status: string
+          type: string
+          updated_at: string
+          value_centavos: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          date?: string
+          description: string
+          id?: string
+          is_repasse?: boolean
+          notes?: string | null
+          organization_id: string
+          project_id?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+          value_centavos: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          is_repasse?: boolean
+          notes?: string | null
+          organization_id?: string
+          project_id?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          value_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
