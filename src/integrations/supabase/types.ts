@@ -14,16 +14,189 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          contrato_fim: string | null
+          contrato_inicio: string | null
+          created_at: string
+          fee_mensal_centavos: number | null
+          id: string
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          contrato_fim?: string | null
+          contrato_inicio?: string | null
+          created_at?: string
+          fee_mensal_centavos?: number | null
+          id?: string
+          name: string
+          organization_id: string
+        }
+        Update: {
+          contrato_fim?: string | null
+          contrato_inicio?: string | null
+          created_at?: string
+          fee_mensal_centavos?: number | null
+          id?: string
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          custo_hora_centavos: number | null
+          id: string
+          name: string
+          organization_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          custo_hora_centavos?: number | null
+          id: string
+          name: string
+          organization_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          custo_hora_centavos?: number | null
+          id?: string
+          name?: string
+          organization_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          client_id: string
+          created_at: string
+          horas_contratadas: number | null
+          id: string
+          name: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          horas_contratadas?: number | null
+          id?: string
+          name: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          horas_contratadas?: number | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      profiles_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          name: string | null
+          organization_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          organization_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          organization_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      can_view_custo_hora: { Args: never; Returns: boolean }
+      get_user_organization_id: { Args: { _user_id: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +323,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

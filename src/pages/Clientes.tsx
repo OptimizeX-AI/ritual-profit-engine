@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,98 +11,81 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, MoreHorizontal, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Plus, Search, MoreHorizontal, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Client {
-  id: string;
-  name: string;
-  fee: number;
-  startDate: string;
-  endDate: string | null;
-  status: "active" | "at_risk" | "churned";
-  margin: number;
-  hoursUsed: number;
-  hoursContracted: number;
-}
-
-const clients: Client[] = [
-  {
-    id: "1",
-    name: "Empresa Alpha Ltda",
-    fee: 28000,
-    startDate: "2024-03-15",
-    endDate: null,
-    status: "active",
-    margin: 48,
-    hoursUsed: 85,
-    hoursContracted: 100,
-  },
-  {
-    id: "2",
-    name: "Tech Solutions S.A.",
-    fee: 22000,
-    startDate: "2024-06-01",
-    endDate: null,
-    status: "active",
-    margin: 55,
-    hoursUsed: 42,
-    hoursContracted: 60,
-  },
-  {
-    id: "3",
-    name: "Startup Beta Inc",
-    fee: 15000,
-    startDate: "2025-01-10",
-    endDate: null,
-    status: "at_risk",
-    margin: 12,
-    hoursUsed: 95,
-    hoursContracted: 80,
-  },
-  {
-    id: "4",
-    name: "Indústria XYZ",
-    fee: 35000,
-    startDate: "2023-08-20",
-    endDate: null,
-    status: "active",
-    margin: 32,
-    hoursUsed: 110,
-    hoursContracted: 120,
-  },
-  {
-    id: "5",
-    name: "Comércio Plus",
-    fee: 18000,
-    startDate: "2024-11-01",
-    endDate: null,
-    status: "at_risk",
-    margin: 8,
-    hoursUsed: 78,
-    hoursContracted: 60,
-  },
-];
-
-const statusConfig = {
-  active: { label: "Ativo", className: "bg-profit/10 text-profit border-profit/20" },
-  at_risk: { label: "Em Risco", className: "bg-warning/10 text-warning border-warning/20" },
-  churned: { label: "Cancelado", className: "bg-loss/10 text-loss border-loss/20" },
-};
+import { useClients, Client, CreateClientInput } from "@/hooks/useClients";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Clientes() {
-  const formatCurrency = (value: number) =>
-    value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const { clients, isLoading, createClient, deleteClient, isCreating, isDeleting } = useClients();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newClient, setNewClient] = useState<CreateClientInput>({
+    name: "",
+    fee_mensal_centavos: 0,
+    contrato_inicio: "",
+    contrato_fim: "",
+  });
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("pt-BR");
-
-  const getOverserviceStatus = (used: number, contracted: number) => {
-    const ratio = used / contracted;
-    if (ratio >= 1) return "loss";
-    if (ratio >= 0.9) return "warning";
-    return "profit";
+  const formatCurrency = (valueInCents: number | null) => {
+    if (valueInCents === null) return "R$ 0,00";
+    return (valueInCents / 100).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
   };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString("pt-BR");
+  };
+
+  const getClientStatus = (client: Client) => {
+    if (client.contrato_fim && new Date(client.contrato_fim) < new Date()) {
+      return "churned";
+    }
+    return "active";
+  };
+
+  const statusConfig = {
+    active: { label: "Ativo", className: "bg-profit/10 text-profit border-profit/20" },
+    churned: { label: "Cancelado", className: "bg-loss/10 text-loss border-loss/20" },
+  };
+
+  const filteredClients = clients.filter((client) =>
+    client.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleCreateClient = () => {
+    if (!newClient.name) return;
+
+    createClient({
+      name: newClient.name,
+      fee_mensal_centavos: newClient.fee_mensal_centavos,
+      contrato_inicio: newClient.contrato_inicio || undefined,
+      contrato_fim: newClient.contrato_fim || undefined,
+    });
+
+    setNewClient({ name: "", fee_mensal_centavos: 0, contrato_inicio: "", contrato_fim: "" });
+    setDialogOpen(false);
+  };
+
+  const activeCount = filteredClients.filter((c) => getClientStatus(c) === "active").length;
 
   return (
     <MainLayout>
@@ -110,120 +94,167 @@ export default function Clientes() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Gestão de Clientes</h1>
-            <p className="text-muted-foreground">
-              Contratos, fees e rentabilidade
-            </p>
+            <p className="text-muted-foreground">Contratos, fees e rentabilidade</p>
           </div>
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Cliente
-          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Novo Cliente
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Novo Cliente</DialogTitle>
+                <DialogDescription>
+                  Adicione um novo cliente à sua carteira.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome do Cliente</Label>
+                  <Input
+                    id="name"
+                    value={newClient.name}
+                    onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
+                    placeholder="Ex: Empresa ABC Ltda"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fee">Fee Mensal (R$)</Label>
+                  <Input
+                    id="fee"
+                    type="number"
+                    value={(newClient.fee_mensal_centavos || 0) / 100}
+                    onChange={(e) =>
+                      setNewClient({
+                        ...newClient,
+                        fee_mensal_centavos: Math.round(parseFloat(e.target.value || "0") * 100),
+                      })
+                    }
+                    placeholder="0,00"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="inicio">Início do Contrato</Label>
+                    <Input
+                      id="inicio"
+                      type="date"
+                      value={newClient.contrato_inicio}
+                      onChange={(e) =>
+                        setNewClient({ ...newClient, contrato_inicio: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fim">Fim do Contrato</Label>
+                    <Input
+                      id="fim"
+                      type="date"
+                      value={newClient.contrato_fim}
+                      onChange={(e) =>
+                        setNewClient({ ...newClient, contrato_fim: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleCreateClient} disabled={isCreating || !newClient.name}>
+                  {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Criar Cliente
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Search */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar cliente..." className="pl-9" />
+            <Input
+              placeholder="Buscar cliente..."
+              className="pl-9"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
           <Badge variant="outline" className="gap-1">
             <span className="h-2 w-2 rounded-full bg-profit" />
-            {clients.filter((c) => c.status === "active").length} ativos
-          </Badge>
-          <Badge variant="outline" className="gap-1">
-            <span className="h-2 w-2 rounded-full bg-warning" />
-            {clients.filter((c) => c.status === "at_risk").length} em risco
+            {activeCount} ativos
           </Badge>
         </div>
 
         {/* Table */}
         <div className="rounded-lg border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead>Cliente</TableHead>
-                <TableHead>Fee Mensal</TableHead>
-                <TableHead>Início Contrato</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Margem</TableHead>
-                <TableHead>Escopo (h)</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {clients.map((client) => {
-                const scopeStatus = getOverserviceStatus(client.hoursUsed, client.hoursContracted);
-                const scopePercent = Math.round((client.hoursUsed / client.hoursContracted) * 100);
-                
-                return (
-                  <TableRow
-                    key={client.id}
-                    className={cn(
-                      client.status === "at_risk" && "table-row-warning"
-                    )}
-                  >
-                    <TableCell className="font-medium">{client.name}</TableCell>
-                    <TableCell>{formatCurrency(client.fee)}</TableCell>
-                    <TableCell>{formatDate(client.startDate)}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={statusConfig[client.status].className}>
-                        {statusConfig[client.status].label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {client.margin >= 30 ? (
-                          <TrendingUp className="h-4 w-4 text-profit" />
-                        ) : client.margin >= 15 ? (
-                          <TrendingDown className="h-4 w-4 text-warning" />
-                        ) : (
-                          <AlertTriangle className="h-4 w-4 text-loss" />
-                        )}
-                        <span
-                          className={cn(
-                            "font-medium",
-                            client.margin >= 30 && "text-profit",
-                            client.margin >= 15 && client.margin < 30 && "text-warning",
-                            client.margin < 15 && "text-loss"
-                          )}
-                        >
-                          {client.margin}%
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className={cn(
-                              "h-full rounded-full transition-all",
-                              scopeStatus === "profit" && "bg-profit",
-                              scopeStatus === "warning" && "bg-warning",
-                              scopeStatus === "loss" && "bg-loss"
-                            )}
-                            style={{ width: `${Math.min(scopePercent, 100)}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {client.hoursUsed}/{client.hoursContracted}h
-                        </span>
-                        {scopePercent > 100 && (
-                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
-                            +{scopePercent - 100}%
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredClients.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-muted-foreground mb-2">Nenhum cliente encontrado</p>
+              <p className="text-sm text-muted-foreground">
+                Clique em "Novo Cliente" para adicionar o primeiro.
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Fee Mensal</TableHead>
+                  <TableHead>Início Contrato</TableHead>
+                  <TableHead>Fim Contrato</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-12"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClients.map((client) => {
+                  const status = getClientStatus(client);
+
+                  return (
+                    <TableRow key={client.id}>
+                      <TableCell className="font-medium">{client.name}</TableCell>
+                      <TableCell>{formatCurrency(client.fee_mensal_centavos)}</TableCell>
+                      <TableCell>{formatDate(client.contrato_inicio)}</TableCell>
+                      <TableCell>{formatDate(client.contrato_fim)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={statusConfig[status].className}>
+                          {statusConfig[status].label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => deleteClient(client.id)}
+                              disabled={isDeleting}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </div>
       </div>
     </MainLayout>
