@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { handleAuthError } from "@/lib/errorHandler";
+import { parseInput, LoginSchema, SignupSchema, ValidationError } from "@/lib/validation";
 
 export default function Login() {
   const { signIn, signUp } = useAuth();
@@ -26,12 +28,28 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate input
+    let validatedData;
+    try {
+      validatedData = parseInput(LoginSchema, {
+        email: loginEmail,
+        password: loginPassword,
+      });
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        toast.error(err.message);
+        return;
+      }
+      throw err;
+    }
+
     setLoading(true);
 
-    const { error } = await signIn(loginEmail, loginPassword);
+    const { error } = await signIn(validatedData.email, validatedData.password);
 
     if (error) {
-      toast.error("Erro ao entrar: " + error.message);
+      toast.error(handleAuthError(error));
     } else {
       toast.success("Bem-vindo de volta!");
       navigate("/");
@@ -42,15 +60,33 @@ export default function Login() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate input
+    let validatedData;
+    try {
+      validatedData = parseInput(SignupSchema, {
+        email: signupEmail,
+        password: signupPassword,
+        name: signupName,
+        organization_name: signupOrgName || "Minha Agência",
+      });
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        toast.error(err.message);
+        return;
+      }
+      throw err;
+    }
+
     setLoading(true);
 
-    const { error } = await signUp(signupEmail, signupPassword, {
-      name: signupName,
-      organization_name: signupOrgName || "Minha Agência",
+    const { error } = await signUp(validatedData.email, validatedData.password, {
+      name: validatedData.name,
+      organization_name: validatedData.organization_name,
     });
 
     if (error) {
-      toast.error("Erro ao criar conta: " + error.message);
+      toast.error(handleAuthError(error));
     } else {
       toast.success("Conta criada com sucesso!");
       navigate("/");
@@ -85,6 +121,7 @@ export default function Login() {
                     placeholder="seu@email.com"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
+                    maxLength={255}
                     required
                   />
                 </div>
@@ -96,6 +133,7 @@ export default function Login() {
                     placeholder="••••••••"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
+                    maxLength={128}
                     required
                   />
                 </div>
@@ -116,6 +154,7 @@ export default function Login() {
                     placeholder="João Silva"
                     value={signupName}
                     onChange={(e) => setSignupName(e.target.value)}
+                    maxLength={255}
                     required
                   />
                 </div>
@@ -127,6 +166,7 @@ export default function Login() {
                     placeholder="Minha Agência Digital"
                     value={signupOrgName}
                     onChange={(e) => setSignupOrgName(e.target.value)}
+                    maxLength={255}
                   />
                 </div>
                 <div className="space-y-2">
@@ -137,6 +177,7 @@ export default function Login() {
                     placeholder="seu@email.com"
                     value={signupEmail}
                     onChange={(e) => setSignupEmail(e.target.value)}
+                    maxLength={255}
                     required
                   />
                 </div>
@@ -148,6 +189,7 @@ export default function Login() {
                     placeholder="••••••••"
                     value={signupPassword}
                     onChange={(e) => setSignupPassword(e.target.value)}
+                    maxLength={128}
                     required
                     minLength={6}
                   />
