@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import CRM from "./pages/CRM";
 import Clientes from "./pages/Clientes";
+import Projetos from "./pages/Projetos";
 import Tarefas from "./pages/Tarefas";
 import Financeiro from "./pages/Financeiro";
 import Login from "./pages/Login";
@@ -47,6 +48,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Clientes />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/projetos"
+                element={
+                  <ProtectedRoute>
+                    <Projetos />
                   </ProtectedRoute>
                 }
               />
