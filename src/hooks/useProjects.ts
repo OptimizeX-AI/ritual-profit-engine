@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { toast } from "sonner";
+import { handleDatabaseError } from "@/lib/errorHandler";
+import { parseInput, ProjectSchema } from "@/lib/validation";
 
 export interface Project {
   id: string;
@@ -45,12 +47,15 @@ export function useProjects() {
 
   const createMutation = useMutation({
     mutationFn: async (input: CreateProjectInput) => {
+      // Validate input before sending to database
+      const validatedData = parseInput(ProjectSchema, input);
+
       const { data, error } = await supabase
         .from("projects")
         .insert({
-          client_id: input.client_id,
-          name: input.name,
-          horas_contratadas: input.horas_contratadas || 0,
+          client_id: validatedData.client_id,
+          name: validatedData.name,
+          horas_contratadas: validatedData.horas_contratadas || 0,
         })
         .select()
         .single();
@@ -63,12 +68,20 @@ export function useProjects() {
       toast.success("Projeto criado com sucesso!");
     },
     onError: (error) => {
-      toast.error("Erro ao criar projeto: " + error.message);
+      toast.error(handleDatabaseError(error as Error, "criar projeto"));
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...input }: Partial<Project> & { id: string }) => {
+      // Validate name if present
+      if (input.name !== undefined && input.name.length === 0) {
+        throw new Error('Nome é obrigatório');
+      }
+      if (input.name !== undefined && input.name.length > 255) {
+        throw new Error('Nome deve ter no máximo 255 caracteres');
+      }
+
       const { data, error } = await supabase
         .from("projects")
         .update(input)
@@ -84,7 +97,7 @@ export function useProjects() {
       toast.success("Projeto atualizado!");
     },
     onError: (error) => {
-      toast.error("Erro ao atualizar projeto: " + error.message);
+      toast.error(handleDatabaseError(error as Error, "atualizar projeto"));
     },
   });
 
@@ -98,7 +111,7 @@ export function useProjects() {
       toast.success("Projeto removido!");
     },
     onError: (error) => {
-      toast.error("Erro ao remover projeto: " + error.message);
+      toast.error(handleDatabaseError(error as Error, "remover projeto"));
     },
   });
 

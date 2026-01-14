@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { toast } from "sonner";
+import { handleDatabaseError } from "@/lib/errorHandler";
+import { parseInput, TeamMemberUpdateSchema } from "@/lib/validation";
 
 export interface TeamMember {
   id: string;
@@ -20,34 +22,50 @@ export function useTeamMembers() {
     queryFn: async () => {
       if (!organization?.id) return [];
 
-      // Fetch profiles in the organization
-      // If admin, include custo_hora_centavos; otherwise use the public view
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("organization_id", organization.id)
-        .order("created_at", { ascending: false });
+      // SECURITY FIX: Use different data sources based on role
+      // Admins query the full profiles table (includes custo_hora_centavos)
+      // Non-admins query profiles_public view (excludes custo_hora_centavos)
+      if (isAdmin) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("organization_id", organization.id)
+          .order("created_at", { ascending: false });
 
-      if (error) throw error;
+        if (error) throw error;
+        return data as TeamMember[];
+      } else {
+        // Use the public view that excludes sensitive salary data
+        const { data, error } = await supabase
+          .from("profiles_public")
+          .select("*")
+          .eq("organization_id", organization.id)
+          .order("created_at", { ascending: false });
 
-      // If not admin, hide custo_hora_centavos
-      if (!isAdmin) {
-        return data.map((member) => ({
-          ...member,
+        if (error) throw error;
+        
+        // Map to TeamMember type with null custo_hora_centavos
+        return (data || []).map((member) => ({
+          id: member.id!,
+          organization_id: member.organization_id,
+          name: member.name || '',
           custo_hora_centavos: null,
+          created_at: member.created_at || '',
         })) as TeamMember[];
       }
-
-      return data as TeamMember[];
     },
     enabled: !!organization?.id,
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, ...input }: Partial<TeamMember> & { id: string }) => {
+    mutationFn: async (input: Partial<TeamMember> & { id: string }) => {
+      // Validate input before sending to database
+      const validatedData = parseInput(TeamMemberUpdateSchema, input);
+      const { id, ...updateData } = validatedData;
+      
       const { data, error } = await supabase
         .from("profiles")
-        .update(input)
+        .update(updateData)
         .eq("id", id)
         .select()
         .single();
@@ -60,7 +78,7 @@ export function useTeamMembers() {
       toast.success("Membro atualizado!");
     },
     onError: (error) => {
-      toast.error("Erro ao atualizar membro: " + error.message);
+      toast.error(handleDatabaseError(error as Error, "atualizar membro"));
     },
   });
 

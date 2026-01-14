@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { toast } from "sonner";
+import { handleDatabaseError } from "@/lib/errorHandler";
+import { parseInput, ClientSchema } from "@/lib/validation";
 
 export interface Client {
   id: string;
@@ -43,16 +45,19 @@ export function useClients() {
 
   const createMutation = useMutation({
     mutationFn: async (input: CreateClientInput) => {
-      if (!organization?.id) throw new Error("No organization");
+      if (!organization?.id) throw new Error("Organização não encontrada");
+
+      // Validate input before sending to database
+      const validatedData = parseInput(ClientSchema, input);
 
       const { data, error } = await supabase
         .from("clients")
         .insert({
           organization_id: organization.id,
-          name: input.name,
-          fee_mensal_centavos: input.fee_mensal_centavos || 0,
-          contrato_inicio: input.contrato_inicio || null,
-          contrato_fim: input.contrato_fim || null,
+          name: validatedData.name,
+          fee_mensal_centavos: validatedData.fee_mensal_centavos || 0,
+          contrato_inicio: validatedData.contrato_inicio || null,
+          contrato_fim: validatedData.contrato_fim || null,
         })
         .select()
         .single();
@@ -65,12 +70,20 @@ export function useClients() {
       toast.success("Cliente criado com sucesso!");
     },
     onError: (error) => {
-      toast.error("Erro ao criar cliente: " + error.message);
+      toast.error(handleDatabaseError(error as Error, "criar cliente"));
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...input }: Partial<Client> & { id: string }) => {
+      // Validate name if present
+      if (input.name !== undefined && input.name.length === 0) {
+        throw new Error('Nome é obrigatório');
+      }
+      if (input.name !== undefined && input.name.length > 255) {
+        throw new Error('Nome deve ter no máximo 255 caracteres');
+      }
+
       const { data, error } = await supabase
         .from("clients")
         .update(input)
@@ -86,7 +99,7 @@ export function useClients() {
       toast.success("Cliente atualizado!");
     },
     onError: (error) => {
-      toast.error("Erro ao atualizar cliente: " + error.message);
+      toast.error(handleDatabaseError(error as Error, "atualizar cliente"));
     },
   });
 
@@ -100,7 +113,7 @@ export function useClients() {
       toast.success("Cliente removido!");
     },
     onError: (error) => {
-      toast.error("Erro ao remover cliente: " + error.message);
+      toast.error(handleDatabaseError(error as Error, "remover cliente"));
     },
   });
 
