@@ -124,24 +124,75 @@ export function useTransactions() {
     },
   });
 
-  // Calculate totals
-  const receitas = query.data?.filter((t) => t.type === "receita" && !t.is_repasse) || [];
-  const despesas = query.data?.filter((t) => t.type === "despesa" && !t.is_repasse) || [];
-  const repasses = query.data?.filter((t) => t.is_repasse) || [];
+  // ============================================
+  // CÁLCULOS FINANCEIROS - COM LÓGICA DE REPASSE
+  // ============================================
 
-  const totalReceitas = receitas.reduce((acc, t) => acc + t.value_centavos, 0);
-  const totalDespesas = despesas.reduce((acc, t) => acc + t.value_centavos, 0);
-  const totalRepasses = repasses.reduce((acc, t) => acc + t.value_centavos, 0) / 2;
+  const transactions = query.data || [];
+
+  // Transações operacionais (excluindo repasses)
+  const receitasOperacionais = transactions.filter(
+    (t) => t.type === "receita" && !t.is_repasse
+  );
+  const despesasOperacionais = transactions.filter(
+    (t) => t.type === "despesa" && !t.is_repasse
+  );
+
+  // Repasses de mídia (não afetam resultado operacional)
+  const repasses = transactions.filter((t) => t.is_repasse);
+
+  // Totais operacionais
+  const totalReceitas = receitasOperacionais.reduce(
+    (acc, t) => acc + t.value_centavos,
+    0
+  );
+  const totalDespesas = despesasOperacionais.reduce(
+    (acc, t) => acc + t.value_centavos,
+    0
+  );
+
+  // Total de repasses (entrada + saída se houver)
+  // Repasses podem ser receita (cliente paga a mídia) ou despesa (agência paga a mídia)
+  const repassesReceita = repasses
+    .filter((t) => t.type === "receita")
+    .reduce((acc, t) => acc + t.value_centavos, 0);
+  const repassesDespesa = repasses
+    .filter((t) => t.type === "despesa")
+    .reduce((acc, t) => acc + t.value_centavos, 0);
+  const totalRepasses = Math.max(repassesReceita, repassesDespesa);
+
+  // Saldo previsto (todas as transações operacionais)
+  const saldoPrevisto = totalReceitas - totalDespesas;
+
+  // Saldo realizado (apenas transações pagas)
+  const receitasRealizadas = receitasOperacionais
+    .filter((t) => t.status === "pago")
+    .reduce((acc, t) => acc + t.value_centavos, 0);
+  const despesasRealizadas = despesasOperacionais
+    .filter((t) => t.status === "pago")
+    .reduce((acc, t) => acc + t.value_centavos, 0);
+  const saldoRealizado = receitasRealizadas - despesasRealizadas;
+
+  // Fluxo de caixa total (inclui repasses para visão completa do caixa)
+  const totalReceitasCaixa = transactions
+    .filter((t) => t.type === "receita")
+    .reduce((acc, t) => acc + t.value_centavos, 0);
+  const totalDespesasCaixa = transactions
+    .filter((t) => t.type === "despesa")
+    .reduce((acc, t) => acc + t.value_centavos, 0);
+  const fluxoCaixa = totalReceitasCaixa - totalDespesasCaixa;
 
   return {
-    transactions: query.data || [],
-    receitas,
-    despesas,
+    transactions,
+    receitas: receitasOperacionais,
+    despesas: despesasOperacionais,
     repasses,
     totalReceitas,
     totalDespesas,
     totalRepasses,
-    saldoPrevisto: totalReceitas - totalDespesas,
+    saldoPrevisto,
+    saldoRealizado,
+    fluxoCaixa,
     isLoading: query.isLoading,
     error: query.error,
     createTransaction: createMutation.mutate,
