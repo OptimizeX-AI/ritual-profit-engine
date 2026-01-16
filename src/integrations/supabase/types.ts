@@ -261,13 +261,17 @@ export type Database = {
       transactions: {
         Row: {
           category: string
+          competence_date: string | null
+          cost_type: string
           created_at: string
           date: string
           description: string
           id: string
           is_repasse: boolean
+          nature: string
           notes: string | null
           organization_id: string
+          payment_date: string | null
           project_id: string | null
           status: string
           type: string
@@ -276,13 +280,17 @@ export type Database = {
         }
         Insert: {
           category: string
+          competence_date?: string | null
+          cost_type?: string
           created_at?: string
           date?: string
           description: string
           id?: string
           is_repasse?: boolean
+          nature?: string
           notes?: string | null
           organization_id: string
+          payment_date?: string | null
           project_id?: string | null
           status?: string
           type: string
@@ -291,13 +299,17 @@ export type Database = {
         }
         Update: {
           category?: string
+          competence_date?: string | null
+          cost_type?: string
           created_at?: string
           date?: string
           description?: string
           id?: string
           is_repasse?: boolean
+          nature?: string
           notes?: string | null
           organization_id?: string
+          payment_date?: string | null
           project_id?: string | null
           status?: string
           type?: string
