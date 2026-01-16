@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -43,10 +43,22 @@ import {
   Edit2,
   Calendar,
   Building2,
+  Info,
+  Shield,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { useTransactions, CreateTransactionInput, TransactionType, TransactionStatus, Transaction } from "@/hooks/useTransactions";
+import {
+  useTransactions,
+  CreateTransactionInput,
+  TransactionType,
+  TransactionStatus,
+  TransactionNature,
+  CostType,
+  Transaction,
+} from "@/hooks/useTransactions";
 import { useProjects } from "@/hooks/useProjects";
 import { useClients } from "@/hooks/useClients";
 import {
@@ -56,30 +68,32 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import {
+  CATEGORIAS_RECEITA,
+  CATEGORIAS_DESPESA,
+  isCategoriaRepasse,
+  validateRepasse,
+} from "@/lib/financialValidation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-// Categorias predefinidas
-const CATEGORIAS_RECEITA = [
-  "Fee Mensal",
-  "Projeto Pontual",
-  "Consultoria",
-  "Comissão",
-  "Outros",
-];
-
-const CATEGORIAS_DESPESA = [
-  "Salários",
-  "Freelancers",
-  "Aluguel",
-  "Ferramentas/Software",
-  "Compra de Mídia/Ads",
-  "Impostos",
-  "Marketing",
-  "Administrativo",
-  "Outros",
-];
-
-type TransactionFormData = Omit<CreateTransactionInput, 'is_repasse'> & {
+type TransactionFormData = {
+  description: string;
+  category: string;
+  value_centavos: number;
+  type: TransactionType;
+  nature: TransactionNature;
+  cost_type: CostType;
   is_repasse: boolean;
+  date: string;
+  competence_date: string;
+  payment_date: string;
+  status: TransactionStatus;
+  project_id: string | undefined;
+  notes: string;
 };
 
 const defaultFormData: TransactionFormData = {
@@ -87,9 +101,13 @@ const defaultFormData: TransactionFormData = {
   category: "",
   value_centavos: 0,
   type: "receita",
+  nature: "operacional",
+  cost_type: "fixo",
   is_repasse: false,
-  status: "pendente",
   date: new Date().toISOString().split("T")[0],
+  competence_date: new Date().toISOString().split("T")[0],
+  payment_date: "",
+  status: "pendente",
   project_id: undefined,
   notes: "",
 };
@@ -103,6 +121,10 @@ export default function Financeiro() {
     saldoPrevisto,
     saldoRealizado,
     fluxoCaixa,
+    custosDiretos,
+    custosFixos,
+    contasReceber,
+    contasPagar,
     isLoading,
     createTransaction,
     updateTransaction,
@@ -115,10 +137,11 @@ export default function Financeiro() {
   const { clients } = useClients();
 
   const [tab, setTab] = useState("transacoes");
-  const [filterTab, setFilterTab] = useState<"todas" | "receitas" | "despesas" | "pendentes">("todas");
+  const [filterTab, setFilterTab] = useState<"todas" | "receitas" | "despesas" | "pendentes" | "repasses">("todas");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [formData, setFormData] = useState<TransactionFormData>(defaultFormData);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const formatCurrency = (valueInCents: number) =>
     (valueInCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -126,6 +149,7 @@ export default function Financeiro() {
   const handleOpenCreate = () => {
     setEditingTransaction(null);
     setFormData(defaultFormData);
+    setValidationError(null);
     setDialogOpen(true);
   };
 
@@ -136,47 +160,122 @@ export default function Financeiro() {
       category: tx.category,
       value_centavos: tx.value_centavos,
       type: tx.type,
+      nature: tx.nature || "operacional",
+      cost_type: tx.cost_type || "fixo",
       is_repasse: tx.is_repasse,
       status: tx.status,
       date: tx.date,
+      competence_date: tx.competence_date || tx.date,
+      payment_date: tx.payment_date || "",
       project_id: tx.project_id || undefined,
       notes: tx.notes || "",
     });
+    setValidationError(null);
     setDialogOpen(true);
   };
 
   const handleCategoryChange = (category: string) => {
-    const isMediaCategory = category === "Compra de Mídia/Ads";
+    const isMediaCategory = isCategoriaRepasse(category);
+    
+    // Auto-marca como repasse se for categoria de mídia
+    const newIsRepasse = isMediaCategory ? true : formData.is_repasse;
+    
+    // Se for repasse, força natureza não operacional
+    const newNature = newIsRepasse ? "nao_operacional" : formData.nature;
+
     setFormData({
       ...formData,
       category,
-      is_repasse: isMediaCategory ? true : formData.is_repasse,
+      is_repasse: newIsRepasse,
+      nature: newNature,
+    });
+    setValidationError(null);
+  };
+
+  const handleRepasseChange = (checked: boolean) => {
+    // Valida se pode ser repasse
+    if (checked) {
+      const validation = validateRepasse(true, formData.category, formData.type);
+      if (!validation.valid) {
+        setValidationError(validation.error || "Configuração inválida para repasse");
+        return;
+      }
+    }
+
+    setFormData({
+      ...formData,
+      is_repasse: checked,
+      // Se for repasse, SEMPRE força natureza não operacional
+      nature: checked ? "nao_operacional" : "operacional",
+    });
+    setValidationError(null);
+  };
+
+  const handleProjectChange = (projectId: string) => {
+    const hasProject = projectId !== "none";
+    setFormData({
+      ...formData,
+      project_id: hasProject ? projectId : undefined,
+      // Se tem projeto, é custo direto
+      cost_type: hasProject ? "direto" : "fixo",
+    });
+  };
+
+  const handleStatusChange = (status: TransactionStatus) => {
+    setFormData({
+      ...formData,
+      status,
+      // Se marcou como pago, registra data de pagamento
+      payment_date: status === "pago" && !formData.payment_date
+        ? new Date().toISOString().split("T")[0]
+        : formData.payment_date,
     });
   };
 
   const handleSave = () => {
-    if (!formData.description || !formData.category) return;
+    if (!formData.description || !formData.category) {
+      setValidationError("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    // Valida repasse
+    if (formData.is_repasse) {
+      const validation = validateRepasse(true, formData.category, formData.type);
+      if (!validation.valid) {
+        setValidationError(validation.error || "Configuração inválida para repasse");
+        return;
+      }
+    }
+
+    const input: CreateTransactionInput = {
+      description: formData.description,
+      category: formData.category,
+      value_centavos: formData.value_centavos,
+      type: formData.type,
+      nature: formData.is_repasse ? "nao_operacional" : formData.nature,
+      cost_type: formData.project_id ? "direto" : "fixo",
+      is_repasse: formData.is_repasse,
+      date: formData.date,
+      competence_date: formData.competence_date || formData.date,
+      payment_date: formData.payment_date || null,
+      status: formData.status,
+      project_id: formData.project_id || null,
+      notes: formData.notes || null,
+    };
 
     if (editingTransaction) {
       updateTransaction({
         id: editingTransaction.id,
-        description: formData.description,
-        category: formData.category,
-        value_centavos: formData.value_centavos,
-        type: formData.type,
-        is_repasse: formData.is_repasse,
-        status: formData.status,
-        date: formData.date,
-        project_id: formData.project_id || null,
-        notes: formData.notes || null,
+        ...input,
       });
     } else {
-      createTransaction(formData);
+      createTransaction(input);
     }
 
     setFormData(defaultFormData);
     setEditingTransaction(null);
     setDialogOpen(false);
+    setValidationError(null);
   };
 
   // Get project info helper
@@ -191,19 +290,12 @@ export default function Financeiro() {
   // Filter transactions
   const filteredTransactions = transactions.filter((tx) => {
     if (filterTab === "todas") return true;
-    if (filterTab === "receitas") return tx.type === "receita";
-    if (filterTab === "despesas") return tx.type === "despesa";
+    if (filterTab === "receitas") return tx.type === "receita" && !tx.is_repasse;
+    if (filterTab === "despesas") return tx.type === "despesa" && !tx.is_repasse;
     if (filterTab === "pendentes") return tx.status === "pendente";
+    if (filterTab === "repasses") return tx.is_repasse;
     return true;
   });
-
-  // Contas a Pagar e Receber
-  const contasReceber = transactions.filter(
-    (t) => t.type === "receita" && t.status === "pendente"
-  );
-  const contasPagar = transactions.filter(
-    (t) => t.type === "despesa" && t.status === "pendente"
-  );
 
   const totalContasReceber = contasReceber.reduce((acc, t) => acc + t.value_centavos, 0);
   const totalContasPagar = contasPagar.reduce((acc, t) => acc + t.value_centavos, 0);
@@ -226,7 +318,7 @@ export default function Financeiro() {
                 Nova Transação
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingTransaction ? "Editar Transação" : "Nova Transação"}
@@ -237,6 +329,14 @@ export default function Financeiro() {
                     : "Adicione uma receita ou despesa."}
                 </DialogDescription>
               </DialogHeader>
+              
+              {validationError && (
+                <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  {validationError}
+                </div>
+              )}
+
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="description">Descrição *</Label>
@@ -259,8 +359,9 @@ export default function Financeiro() {
                         setFormData({
                           ...formData,
                           type: v as TransactionType,
-                          category: "", // Reset category when type changes
+                          category: "",
                           is_repasse: false,
+                          nature: "operacional",
                         })
                       }
                     >
@@ -316,26 +417,10 @@ export default function Financeiro() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="date">Data *</Label>
-                    <Input
-                      id="date"
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) =>
-                        setFormData({ ...formData, date: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
                     <Select
                       value={formData.status}
-                      onValueChange={(v) =>
-                        setFormData({ ...formData, status: v as TransactionStatus })
-                      }
+                      onValueChange={handleStatusChange}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -346,65 +431,151 @@ export default function Financeiro() {
                           {formData.type === "receita" ? "Recebido" : "Pago"}
                         </SelectItem>
                         <SelectItem value="atrasado">Atrasado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="project">Projeto (Opcional)</Label>
-                    <Select
-                      value={formData.project_id || "none"}
-                      onValueChange={(v) =>
-                        setFormData({
-                          ...formData,
-                          project_id: v === "none" ? undefined : v,
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Nenhum" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhum (Custo Fixo)</SelectItem>
-                        {projects.map((project) => {
-                          const client = clients.find(
-                            (c) => c.id === project.client_id
-                          );
-                          return (
-                            <SelectItem key={project.id} value={project.id}>
-                              {project.name}
-                              {client ? ` (${client.name})` : ""}
-                            </SelectItem>
-                          );
-                        })}
+                        <SelectItem value="cancelado">Cancelado</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                {/* Repasse checkbox - only show for Compra de Mídia */}
-                {formData.category === "Compra de Mídia/Ads" && (
-                  <div className="flex items-start gap-3 p-4 bg-warning/10 border border-warning/20 rounded-lg">
+                {/* Datas - Modelo Caixa vs Competência */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm font-semibold">Datas</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-xs">
+                          <strong>Competência:</strong> Quando a transação aconteceu contabilmente.<br />
+                          <strong>Vencimento:</strong> Data prevista para pagamento.<br />
+                          <strong>Pagamento:</strong> Quando foi efetivamente pago/recebido.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="competence_date" className="text-xs text-muted-foreground">
+                        Competência
+                      </Label>
+                      <Input
+                        id="competence_date"
+                        type="date"
+                        value={formData.competence_date}
+                        onChange={(e) =>
+                          setFormData({ ...formData, competence_date: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="date" className="text-xs text-muted-foreground">
+                        Vencimento
+                      </Label>
+                      <Input
+                        id="date"
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) =>
+                          setFormData({ ...formData, date: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="payment_date" className="text-xs text-muted-foreground">
+                        Pagamento
+                      </Label>
+                      <Input
+                        id="payment_date"
+                        type="date"
+                        value={formData.payment_date}
+                        onChange={(e) =>
+                          setFormData({ ...formData, payment_date: e.target.value })
+                        }
+                        disabled={formData.status !== "pago"}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="project">Projeto (Opcional)</Label>
+                  <Select
+                    value={formData.project_id || "none"}
+                    onValueChange={handleProjectChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Nenhum" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum (Custo Fixo)</SelectItem>
+                      {projects.map((project) => {
+                        const client = clients.find(
+                          (c) => c.id === project.client_id
+                        );
+                        return (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.name}
+                            {client ? ` (${client.name})` : ""}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {formData.project_id 
+                      ? "Custo direto do projeto" 
+                      : "Custo fixo da agência"}
+                  </p>
+                </div>
+
+                {/* Repasse - Blindagem */}
+                {isCategoriaRepasse(formData.category) && (
+                  <div className={cn(
+                    "flex items-start gap-3 p-4 rounded-lg border",
+                    formData.is_repasse 
+                      ? "bg-warning/10 border-warning/30" 
+                      : "bg-muted/50 border-border"
+                  )}>
                     <Checkbox
                       id="is_repasse"
                       checked={formData.is_repasse}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, is_repasse: checked as boolean })
-                      }
+                      onCheckedChange={(checked) => handleRepasseChange(checked as boolean)}
                     />
-                    <div className="space-y-1">
-                      <Label
-                        htmlFor="is_repasse"
-                        className="text-sm font-medium cursor-pointer"
-                      >
-                        Marcar como Repasse de Mídia
-                      </Label>
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label
+                          htmlFor="is_repasse"
+                          className="text-sm font-medium cursor-pointer"
+                        >
+                          Marcar como Repasse de Mídia
+                        </Label>
+                        <Shield className="h-4 w-4 text-warning" />
+                      </div>
                       <p className="text-xs text-muted-foreground">
-                        Repasses não entram como receita/despesa operacional. Afetam
-                        apenas o fluxo de caixa, não o DRE.
+                        Repasses são <strong>blindados</strong>: não entram como receita/despesa 
+                        operacional, não afetam o DRE nem a rentabilidade. 
+                        Impactam <strong>apenas o fluxo de caixa</strong>.
                       </p>
                     </div>
                   </div>
                 )}
+
+                {/* Info sobre classificação */}
+                <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <span className="font-medium">Natureza:</span>
+                    <Badge variant="outline" className="text-[10px]">
+                      {formData.is_repasse ? "Não Operacional" : "Operacional"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="font-medium">Custo:</span>
+                    <Badge variant="outline" className="text-[10px]">
+                      {formData.project_id ? "Direto" : "Fixo"}
+                    </Badge>
+                  </div>
+                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="notes">Observações</Label>
@@ -425,6 +596,7 @@ export default function Financeiro() {
                   onClick={() => {
                     setDialogOpen(false);
                     setEditingTransaction(null);
+                    setValidationError(null);
                   }}
                 >
                   Cancelar
@@ -454,15 +626,15 @@ export default function Financeiro() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-profit/10">
-                  <ArrowUpRight className="h-5 w-5 text-profit" />
+                  <TrendingUp className="h-5 w-5 text-profit" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Receitas (Operacional)</p>
+                  <p className="text-sm text-muted-foreground">Receitas Operacionais</p>
                   <p className="text-xl font-bold text-profit">
                     {formatCurrency(totalReceitas)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Excluindo repasses de mídia
+                    Excluindo repasses
                   </p>
                 </div>
               </div>
@@ -473,16 +645,17 @@ export default function Financeiro() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-loss/10">
-                  <ArrowDownLeft className="h-5 w-5 text-loss" />
+                  <TrendingDown className="h-5 w-5 text-loss" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Despesas (Operacional)</p>
+                  <p className="text-sm text-muted-foreground">Despesas Operacionais</p>
                   <p className="text-xl font-bold text-loss">
                     {formatCurrency(totalDespesas)}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    Excluindo repasses de mídia
-                  </p>
+                  <div className="flex gap-2 text-xs text-muted-foreground">
+                    <span>Diretos: {formatCurrency(custosDiretos)}</span>
+                    <span>Fixos: {formatCurrency(custosFixos)}</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -495,7 +668,7 @@ export default function Financeiro() {
                   <Wallet className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Saldo Operacional</p>
+                  <p className="text-sm text-muted-foreground">Resultado Operacional</p>
                   <p
                     className={cn(
                       "text-xl font-bold",
@@ -505,7 +678,7 @@ export default function Financeiro() {
                     {formatCurrency(saldoPrevisto)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Receitas - Despesas
+                    Realizado: {formatCurrency(saldoRealizado)}
                   </p>
                 </div>
               </div>
@@ -516,7 +689,7 @@ export default function Financeiro() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-warning/10">
-                  <AlertCircle className="h-5 w-5 text-warning" />
+                  <Shield className="h-5 w-5 text-warning" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Repasses (Mídia)</p>
@@ -542,7 +715,7 @@ export default function Financeiro() {
 
           <TabsContent value="transacoes" className="mt-4 space-y-4">
             {/* Filter tabs */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant={filterTab === "todas" ? "secondary" : "ghost"}
                 size="sm"
@@ -571,6 +744,14 @@ export default function Financeiro() {
               >
                 Pendentes
               </Button>
+              <Button
+                variant={filterTab === "repasses" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setFilterTab("repasses")}
+              >
+                <Shield className="h-3 w-3 mr-1" />
+                Repasses
+              </Button>
             </div>
 
             <div className="rounded-lg border bg-card">
@@ -594,7 +775,7 @@ export default function Financeiro() {
                       <TableHead>Descrição</TableHead>
                       <TableHead>Categoria</TableHead>
                       <TableHead>Projeto</TableHead>
-                      <TableHead>Data</TableHead>
+                      <TableHead>Competência</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Valor</TableHead>
                       <TableHead className="w-12"></TableHead>
@@ -604,7 +785,9 @@ export default function Financeiro() {
                     {filteredTransactions.map((tx) => {
                       const projectInfo = getProjectInfo(tx.project_id);
                       return (
-                        <TableRow key={tx.id}>
+                        <TableRow key={tx.id} className={cn(
+                          tx.is_repasse && "bg-warning/5"
+                        )}>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {tx.type === "receita" ? (
@@ -618,13 +801,19 @@ export default function Financeiro() {
                                   variant="outline"
                                   className="text-[10px] px-1.5 bg-warning/10 text-warning border-warning/20"
                                 >
+                                  <Shield className="h-2.5 w-2.5 mr-0.5" />
                                   REPASSE
                                 </Badge>
                               )}
                             </div>
                           </TableCell>
                           <TableCell>
-                            <span className="text-sm">{tx.category}</span>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-sm">{tx.category}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {tx.cost_type === "direto" ? "Custo Direto" : "Custo Fixo"}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell>
                             {projectInfo ? (
@@ -639,7 +828,9 @@ export default function Financeiro() {
                           <TableCell>
                             <div className="flex items-center gap-1 text-sm">
                               <Calendar className="h-3 w-3 text-muted-foreground" />
-                              {new Date(tx.date).toLocaleDateString("pt-BR")}
+                              {tx.competence_date 
+                                ? new Date(tx.competence_date).toLocaleDateString("pt-BR")
+                                : new Date(tx.date).toLocaleDateString("pt-BR")}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -651,7 +842,9 @@ export default function Financeiro() {
                                 tx.status === "pendente" &&
                                   "bg-warning/10 text-warning border-warning/20",
                                 tx.status === "atrasado" &&
-                                  "bg-loss/10 text-loss border-loss/20"
+                                  "bg-loss/10 text-loss border-loss/20",
+                                tx.status === "cancelado" &&
+                                  "bg-muted text-muted-foreground"
                               )}
                             >
                               {tx.status === "pago"
@@ -664,7 +857,9 @@ export default function Financeiro() {
                           <TableCell
                             className={cn(
                               "text-right font-medium tabular-nums",
-                              tx.type === "receita" ? "text-profit" : "text-loss"
+                              tx.is_repasse 
+                                ? "text-muted-foreground"
+                                : tx.type === "receita" ? "text-profit" : "text-loss"
                             )}
                           >
                             {tx.type === "receita" ? "+" : "-"}
@@ -710,6 +905,9 @@ export default function Financeiro() {
                     <ArrowUpRight className="h-5 w-5 text-profit" />
                     Contas a Receber
                   </CardTitle>
+                  <CardDescription>
+                    Receitas pendentes de recebimento
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {contasReceber.length === 0 ? (
@@ -753,6 +951,9 @@ export default function Financeiro() {
                     <ArrowDownLeft className="h-5 w-5 text-loss" />
                     Contas a Pagar
                   </CardTitle>
+                  <CardDescription>
+                    Despesas pendentes de pagamento
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {contasPagar.length === 0 ? (
@@ -798,9 +999,12 @@ export default function Financeiro() {
                   <Wallet className="h-5 w-5 text-primary" />
                   Resumo de Fluxo de Caixa
                 </CardTitle>
+                <CardDescription>
+                  Visão consolidada: operacional + repasses
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4 max-w-2xl">
+                <div className="space-y-6 max-w-2xl">
                   {/* Operacional */}
                   <div className="space-y-2">
                     <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
@@ -813,7 +1017,12 @@ export default function Financeiro() {
                       </span>
                     </div>
                     <div className="flex justify-between py-2">
-                      <span>Despesas Operacionais</span>
+                      <div className="flex flex-col">
+                        <span>Despesas Operacionais</span>
+                        <span className="text-xs text-muted-foreground">
+                          Custos Diretos: {formatCurrency(custosDiretos)} | Custos Fixos: {formatCurrency(custosFixos)}
+                        </span>
+                      </div>
                       <span className="font-medium text-loss tabular-nums">
                         -{formatCurrency(totalDespesas)}
                       </span>
@@ -833,20 +1042,31 @@ export default function Financeiro() {
                   </div>
 
                   {/* Repasses */}
-                  <div className="space-y-2 mt-6">
-                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                      Repasses de Mídia (Não-operacional)
-                    </h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                        Repasses de Mídia
+                      </h3>
+                      <Shield className="h-4 w-4 text-warning" />
+                    </div>
                     <div className="flex justify-between py-2">
                       <span>Total de Repasses</span>
                       <span className="font-medium text-muted-foreground tabular-nums">
                         {formatCurrency(totalRepasses)}
                       </span>
                     </div>
-                    <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-                      <AlertCircle className="h-4 w-4 inline mr-2" />
-                      Repasses de mídia transitam pelo caixa mas não representam receita
-                      ou despesa operacional da agência.
+                    <div className="p-3 bg-warning/10 border border-warning/20 rounded-lg text-sm">
+                      <div className="flex items-start gap-2">
+                        <Shield className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-medium text-warning">Repasses Blindados</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Repasses de mídia transitam pelo caixa mas <strong>não representam 
+                            receita ou despesa operacional</strong>. Não afetam DRE, margem ou 
+                            rentabilidade por cliente.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
