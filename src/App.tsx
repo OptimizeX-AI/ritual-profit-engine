@@ -14,6 +14,9 @@ import Tarefas from "./pages/Tarefas";
 import Financeiro from "./pages/Financeiro";
 import WarRoom from "./pages/WarRoom";
 import TeamSettings from "./pages/settings/TeamSettings";
+import Timesheet from "./pages/Timesheet";
+import Relatorios from "./pages/Relatorios";
+import Configuracoes from "./pages/Configuracoes";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -90,6 +93,30 @@ const App = () => (
                 element={
                   <ProtectedRoute requireAdmin>
                     <TeamSettings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/timesheet"
+                element={
+                  <ProtectedRoute>
+                    <Timesheet />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/relatorios"
+                element={
+                  <ProtectedRoute>
+                    <Relatorios />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/configuracoes"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <Configuracoes />
                   </ProtectedRoute>
                 }
               />
