@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import CRM from "./pages/CRM";
 import Clientes from "./pages/Clientes";
 import Projetos from "./pages/Projetos";
+import ProjectDetail from "./pages/ProjectDetail";
+import NewProjectFromDeal from "./pages/NewProjectFromDeal";
 import Tarefas from "./pages/Tarefas";
 import Financeiro from "./pages/Financeiro";
 import WarRoom from "./pages/WarRoom";
@@ -61,6 +63,22 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Projetos />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/projetos/:id"
+                element={
+                  <ProtectedRoute>
+                    <ProjectDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/projects/new"
+                element={
+                  <ProtectedRoute>
+                    <NewProjectFromDeal />
                   </ProtectedRoute>
                 }
               />

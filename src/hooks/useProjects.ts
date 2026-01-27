@@ -5,18 +5,30 @@ import { toast } from "sonner";
 import { handleDatabaseError } from "@/lib/errorHandler";
 import { parseInput, ProjectSchema } from "@/lib/validation";
 
+export type ScopeType = "horas_fechadas" | "fee_mensal" | "pontual";
+
 export interface Project {
   id: string;
   client_id: string;
   name: string;
   horas_contratadas: number | null;
+  scope_type: ScopeType;
+  initial_budget_hours: number;
+  current_budget_hours: number;
   created_at: string;
+  clients?: {
+    organization_id: string;
+    name: string;
+  };
 }
 
 export interface CreateProjectInput {
   client_id: string;
   name: string;
   horas_contratadas?: number;
+  scope_type?: ScopeType;
+  initial_budget_hours?: number;
+  current_budget_hours?: number;
 }
 
 export function useProjects() {
@@ -34,13 +46,14 @@ export function useProjects() {
         .select(`
           *,
           clients!inner (
-            organization_id
+            organization_id,
+            name
           )
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as (Project & { clients: { organization_id: string } })[];
+      return data as Project[];
     },
     enabled: !!organization?.id,
   });
@@ -50,12 +63,17 @@ export function useProjects() {
       // Validate input before sending to database
       const validatedData = parseInput(ProjectSchema, input);
 
+      const initialBudget = input.initial_budget_hours || input.horas_contratadas || 0;
+
       const { data, error } = await supabase
         .from("projects")
         .insert({
           client_id: validatedData.client_id,
           name: validatedData.name,
           horas_contratadas: validatedData.horas_contratadas || 0,
+          scope_type: input.scope_type || "fee_mensal",
+          initial_budget_hours: initialBudget,
+          current_budget_hours: initialBudget,
         })
         .select()
         .single();
@@ -126,4 +144,32 @@ export function useProjects() {
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };
+}
+
+// Hook for single project with detailed data
+export function useProjectDetail(projectId: string | undefined) {
+  return useQuery({
+    queryKey: ["project-detail", projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+
+      const { data, error } = await supabase
+        .from("projects")
+        .select(`
+          *,
+          clients (
+            id,
+            name,
+            fee_mensal_centavos,
+            organization_id
+          )
+        `)
+        .eq("id", projectId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!projectId,
+  });
 }
