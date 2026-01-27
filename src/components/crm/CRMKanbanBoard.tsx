@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -652,6 +653,32 @@ export function CRMKanbanBoard() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-expected-close">Data de Fechamento Esperada</Label>
+                <Input
+                  id="edit-expected-close"
+                  type="date"
+                  value={dealToEdit.expected_close_date || ""}
+                  onChange={(e) => setDealToEdit({ ...dealToEdit, expected_close_date: e.target.value || null })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-notes" className="flex items-center gap-2">
+                  <span>Follow-ups / Anotações</span>
+                  <span className="text-xs text-muted-foreground font-normal">(visível para gestores)</span>
+                </Label>
+                <Textarea
+                  id="edit-notes"
+                  value={dealToEdit.notes || ""}
+                  onChange={(e) => setDealToEdit({ ...dealToEdit, notes: e.target.value })}
+                  placeholder="Ex: 27/01 - Ligação realizada, cliente pediu nova proposta...&#10;25/01 - Reunião agendada para 30/01..."
+                  rows={4}
+                  className="resize-none"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Registre aqui o histórico de contatos, próximos passos e observações importantes.
+                </p>
               </div>
             </div>
           )}
