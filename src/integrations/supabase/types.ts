@@ -108,10 +108,14 @@ export type Database = {
           contact: string | null
           created_at: string
           days_in_stage: number
+          expected_close_date: string | null
           id: string
+          loss_reason: string | null
           notes: string | null
           organization_id: string
+          origin: string | null
           probability: number
+          salesperson_id: string | null
           stage: string
           updated_at: string
           value_centavos: number
@@ -121,10 +125,14 @@ export type Database = {
           contact?: string | null
           created_at?: string
           days_in_stage?: number
+          expected_close_date?: string | null
           id?: string
+          loss_reason?: string | null
           notes?: string | null
           organization_id: string
+          origin?: string | null
           probability?: number
+          salesperson_id?: string | null
           stage?: string
           updated_at?: string
           value_centavos?: number
@@ -134,10 +142,14 @@ export type Database = {
           contact?: string | null
           created_at?: string
           days_in_stage?: number
+          expected_close_date?: string | null
           id?: string
+          loss_reason?: string | null
           notes?: string | null
           organization_id?: string
+          origin?: string | null
           probability?: number
+          salesperson_id?: string | null
           stage?: string
           updated_at?: string
           value_centavos?: number
@@ -145,6 +157,61 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "deals_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_salesperson_id_fkey"
+            columns: ["salesperson_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_salesperson_id_fkey"
+            columns: ["salesperson_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_goals: {
+        Row: {
+          achieved_value_centavos: number
+          created_at: string
+          id: string
+          month: string
+          organization_id: string
+          target_value_centavos: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          achieved_value_centavos?: number
+          created_at?: string
+          id?: string
+          month: string
+          organization_id: string
+          target_value_centavos?: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          achieved_value_centavos?: number
+          created_at?: string
+          id?: string
+          month?: string
+          organization_id?: string
+          target_value_centavos?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_goals_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -543,6 +610,15 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      provision_sales_commission: {
+        Args: {
+          p_deal_id: string
+          p_deal_value: number
+          p_organization_id: string
+          p_salesperson_id: string
+        }
+        Returns: string
       }
     }
     Enums: {

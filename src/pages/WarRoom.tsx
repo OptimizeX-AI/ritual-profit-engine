@@ -1,9 +1,14 @@
 import { MainLayout } from "@/components/layout/MainLayout";
+import { GoalsGauges } from "@/components/warroom/GoalsGauges";
+import { SalesRanking } from "@/components/warroom/SalesRanking";
+import { ChurnRadar } from "@/components/warroom/ChurnRadar";
+import { GoalsManager } from "@/components/warroom/GoalsManager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useProjects } from "@/hooks/useProjects";
 import { useTasks } from "@/hooks/useTasks";
-import { DollarSign, AlertTriangle, Clock, Loader2 } from "lucide-react";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { DollarSign, AlertTriangle, Clock, Loader2, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function formatCurrency(centavos: number): string {
@@ -14,6 +19,7 @@ function formatCurrency(centavos: number): string {
 }
 
 export default function WarRoom() {
+  const { isAdmin } = useOrganization();
   const { transactions, isLoading: loadingTransactions } = useTransactions();
   const { projects, isLoading: loadingProjects } = useProjects();
   const { tasks, isLoading: loadingTasks } = useTasks();
@@ -37,12 +43,10 @@ export default function WarRoom() {
   // ============================================
   // BLOCO 2: Projetos em Risco
   // ============================================
-  // Projetos onde horas realizadas > 80% das horas contratadas
   const projectsAtRisk = projects
     .filter((p) => {
       if (!p.horas_contratadas || p.horas_contratadas === 0) return false;
       
-      // Soma horas gastas nas tasks deste projeto
       const hoursSpent = tasks
         .filter((t) => t.project_id === p.id)
         .reduce((sum, t) => sum + t.time_spent_minutes / 60, 0);
@@ -70,13 +74,11 @@ export default function WarRoom() {
   today.setHours(0, 0, 0, 0);
 
   const bottlenecks = tasks.filter((t) => {
-    // Deadline vencido
     if (t.deadline) {
       const deadline = new Date(t.deadline);
       deadline.setHours(0, 0, 0, 0);
       if (deadline < today && t.status !== "done") return true;
     }
-    // Status crítico
     if (t.status === "waiting_approval") return true;
     return false;
   });
@@ -95,16 +97,45 @@ export default function WarRoom() {
     <MainLayout>
       <div className="p-6 lg:p-8 space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">War Room</h1>
-          <p className="text-muted-foreground">
-            Visão executiva somente leitura — Ritual de Gestão
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <Target className="h-6 w-6" />
+              War Room
+            </h1>
+            <p className="text-muted-foreground">
+              Visão executiva — Metas vs Realizado
+            </p>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {new Date().toLocaleDateString("pt-BR", {
+              month: "long",
+              year: "numeric",
+            })}
+          </div>
         </div>
 
-        {/* Grid de Cards */}
+        {/* Bloco A: Metas (Gauges) */}
+        <section>
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            O Alvo
+          </h2>
+          <GoalsGauges />
+        </section>
+
+        {/* Grid Principal */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Bloco B: Ranking de Vendas */}
+          <SalesRanking />
+
+          {/* Bloco C: Radar de Churn */}
+          <ChurnRadar />
+        </div>
+
+        {/* Cards Operacionais (Legado melhorado) */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Bloco 1: Receita do Mês */}
+          {/* Receita do Mês */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -119,13 +150,10 @@ export default function WarRoom() {
               <div className="text-3xl font-bold text-profit">
                 {formatCurrency(monthlyRevenue)}
               </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                {new Date().toLocaleString("pt-BR", { month: "long", year: "numeric" })}
-              </p>
             </CardContent>
           </Card>
 
-          {/* Bloco 2: Projetos em Risco */}
+          {/* Projetos em Risco */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -170,17 +198,12 @@ export default function WarRoom() {
                       </div>
                     </div>
                   ))}
-                  {projectsAtRisk.length > 5 && (
-                    <p className="text-xs text-muted-foreground">
-                      + {projectsAtRisk.length - 5} projetos
-                    </p>
-                  )}
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Bloco 3: Gargalos */}
+          {/* Gargalos */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -216,17 +239,19 @@ export default function WarRoom() {
                         </span>
                       </div>
                     ))}
-                    {bottlenecks.length > 4 && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        + {bottlenecks.length - 4} tarefas
-                      </p>
-                    )}
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
+
+        {/* Admin: Gerenciar Metas */}
+        {isAdmin && (
+          <section className="pt-4">
+            <GoalsManager />
+          </section>
+        )}
       </div>
     </MainLayout>
   );

@@ -9,9 +9,12 @@ export const CRM_STAGES = [
   { id: "proposal", label: "Proposta", probability: 40 },
   { id: "negotiation", label: "Negociação", probability: 70 },
   { id: "closed_won", label: "Fechado ✓", probability: 100 },
+  { id: "closed_lost", label: "Perdido ✗", probability: 0 },
 ] as const;
 
 export type CRMStageId = (typeof CRM_STAGES)[number]["id"];
+
+export type DealOrigin = "ads" | "indicacao" | "outbound" | "organic";
 
 export interface CRMDeal {
   id: string;
@@ -23,6 +26,10 @@ export interface CRMDeal {
   stage: CRMStageId;
   days_in_stage: number;
   notes: string | null;
+  origin: DealOrigin;
+  loss_reason: string | null;
+  expected_close_date: string | null;
+  salesperson_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -34,6 +41,9 @@ export interface CreateDealInput {
   probability?: number;
   stage?: CRMStageId;
   notes?: string;
+  origin?: DealOrigin;
+  salesperson_id?: string;
+  expected_close_date?: string;
 }
 
 export function useCRMKanban() {
@@ -52,17 +62,40 @@ export function useCRMKanban() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as CRMDeal[];
+      
+      // Map data with defaults for new fields
+      return (data || []).map((deal) => ({
+        ...deal,
+        stage: deal.stage as CRMStageId,
+        origin: (deal.origin || "organic") as DealOrigin,
+      })) as CRMDeal[];
     },
     enabled: !!organization?.id,
   });
 
   // Update stage mutation with optimistic update
   const updateStageMutation = useMutation({
-    mutationFn: async ({ id, stage }: { id: string; stage: CRMStageId }) => {
+    mutationFn: async ({ 
+      id, 
+      stage, 
+      loss_reason 
+    }: { 
+      id: string; 
+      stage: CRMStageId; 
+      loss_reason?: string;
+    }) => {
+      const updateData: Record<string, unknown> = { 
+        stage, 
+        updated_at: new Date().toISOString() 
+      };
+      
+      if (loss_reason) {
+        updateData.loss_reason = loss_reason;
+      }
+      
       const { data, error } = await supabase
         .from("deals")
-        .update({ stage, updated_at: new Date().toISOString() })
+        .update(updateData)
         .eq("id", id)
         .select()
         .single();
@@ -71,21 +104,14 @@ export function useCRMKanban() {
       return data;
     },
     onMutate: async ({ id, stage }) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["crm-deals"] });
-
-      // Snapshot current data
       const previousDeals = queryClient.getQueryData<CRMDeal[]>(["crm-deals", organization?.id]);
-
-      // Optimistically update
       queryClient.setQueryData<CRMDeal[]>(["crm-deals", organization?.id], (old) =>
         old?.map((deal) => (deal.id === id ? { ...deal, stage } : deal))
       );
-
       return { previousDeals };
     },
     onError: (err, _, context) => {
-      // Rollback on error
       if (context?.previousDeals) {
         queryClient.setQueryData(["crm-deals", organization?.id], context.previousDeals);
       }
@@ -96,6 +122,41 @@ export function useCRMKanban() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["crm-deals"] });
+    },
+  });
+
+  // Provision commission mutation
+  const provisionCommissionMutation = useMutation({
+    mutationFn: async ({ 
+      dealId, 
+      dealValue, 
+      salespersonId 
+    }: { 
+      dealId: string; 
+      dealValue: number; 
+      salespersonId: string;
+    }) => {
+      if (!organization?.id) throw new Error("Organization not found");
+      
+      // Call the database function to provision commission
+      const { data, error } = await supabase.rpc("provision_sales_commission", {
+        p_deal_id: dealId,
+        p_deal_value: dealValue,
+        p_salesperson_id: salespersonId,
+        p_organization_id: organization.id,
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (transactionId) => {
+      if (transactionId) {
+        toast.success("Comissão provisionada!");
+        queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      }
+    },
+    onError: () => {
+      toast.error("Erro ao provisionar comissão");
     },
   });
 
@@ -113,6 +174,9 @@ export function useCRMKanban() {
           probability: input.probability || 20,
           stage: input.stage || "prospecting",
           notes: input.notes || null,
+          origin: input.origin || "organic",
+          salesperson_id: input.salesperson_id || null,
+          expected_close_date: input.expected_close_date || null,
         })
         .select()
         .single();
@@ -126,6 +190,27 @@ export function useCRMKanban() {
     },
     onError: () => {
       toast.error("Erro ao criar negócio");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, ...input }: Partial<CRMDeal> & { id: string }) => {
+      const { data, error } = await supabase
+        .from("deals")
+        .update(input)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["crm-deals"] });
+      toast.success("Negócio atualizado!");
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar negócio");
     },
   });
 
@@ -149,25 +234,25 @@ export function useCRMKanban() {
     proposal: [],
     negotiation: [],
     closed_won: [],
+    closed_lost: [],
   };
 
   (query.data || []).forEach((deal) => {
     if (dealsByStage[deal.stage]) {
       dealsByStage[deal.stage].push(deal);
     } else {
-      // Handle legacy stages (e.g., closed_lost)
       dealsByStage.prospecting.push(deal);
     }
   });
 
   // Calculate weighted pipeline (excluding closed deals)
   const pipelineValue = (query.data || [])
-    .filter((d) => d.stage !== "closed_won")
+    .filter((d) => d.stage !== "closed_won" && d.stage !== "closed_lost")
     .reduce((acc, d) => acc + d.value_centavos * (d.probability / 100), 0);
 
   // Total pipeline value (all non-closed)
   const totalPipeline = (query.data || [])
-    .filter((d) => d.stage !== "closed_won")
+    .filter((d) => d.stage !== "closed_won" && d.stage !== "closed_lost")
     .reduce((acc, d) => acc + d.value_centavos, 0);
 
   // Closed won value
@@ -188,10 +273,13 @@ export function useCRMKanban() {
 
     // Mutations
     updateStage: updateStageMutation.mutate,
+    updateDeal: updateMutation.mutate,
     createDeal: createMutation.mutate,
     deleteDeal: deleteMutation.mutate,
+    provisionCommission: provisionCommissionMutation.mutate,
     isUpdating: updateStageMutation.isPending,
     isCreating: createMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isProvisioningCommission: provisionCommissionMutation.isPending,
   };
 }
