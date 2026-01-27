@@ -24,7 +24,7 @@ const navItems: NavItem[] = [
   { title: "Timesheet", href: "/timesheet", icon: Clock },
   { title: "Financeiro", href: "/financeiro", icon: DollarSign },
   { title: "Relatórios", href: "/relatorios", icon: BarChart3 },
-  { title: "Equipe", href: "/equipe", icon: Users },
+  { title: "Equipe", href: "/settings/team", icon: Users },
   { title: "Configurações", href: "/configuracoes", icon: Settings },
 ];
 

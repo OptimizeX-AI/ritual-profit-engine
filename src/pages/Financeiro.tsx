@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
@@ -529,36 +530,44 @@ export default function Financeiro() {
                   </p>
                 </div>
 
-                {/* Repasse - Blindagem */}
-                {isCategoriaRepasse(formData.category) && (
-                  <div className={cn(
-                    "flex items-start gap-3 p-4 rounded-lg border",
-                    formData.is_repasse 
-                      ? "bg-warning/10 border-warning/30" 
-                      : "bg-muted/50 border-border"
-                  )}>
-                    <Checkbox
-                      id="is_repasse"
-                      checked={formData.is_repasse}
-                      onCheckedChange={(checked) => handleRepasseChange(checked as boolean)}
-                    />
-                    <div className="space-y-1 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Label
-                          htmlFor="is_repasse"
-                          className="text-sm font-medium cursor-pointer"
-                        >
-                          Marcar como Repasse de Mídia
-                        </Label>
-                        <Shield className="h-4 w-4 text-warning" />
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Repasses são <strong>blindados</strong>: não entram como receita/despesa 
-                        operacional, não afetam o DRE nem a rentabilidade. 
-                        Impactam <strong>apenas o fluxo de caixa</strong>.
-                      </p>
+                {/* Repasse - Blindagem com Switch */}
+                <div className={cn(
+                  "flex items-center justify-between gap-4 p-4 rounded-lg border",
+                  formData.is_repasse 
+                    ? "bg-warning/10 border-warning/30" 
+                    : "bg-muted/50 border-border"
+                )}>
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Label
+                        htmlFor="is_repasse"
+                        className="text-sm font-medium cursor-pointer"
+                      >
+                        É Repasse de Mídia?
+                      </Label>
+                      <Shield className="h-4 w-4 text-warning" />
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      {isCategoriaRepasse(formData.category) 
+                        ? "Categoria compatível com repasse de mídia"
+                        : "Ative para marcar como repasse de mídia"}
+                    </p>
                   </div>
+                  <Switch
+                    id="is_repasse"
+                    checked={formData.is_repasse}
+                    onCheckedChange={handleRepasseChange}
+                  />
+                </div>
+
+                {/* Alerta visual quando is_repasse = true */}
+                {formData.is_repasse && (
+                  <Alert className="border-warning/50 bg-warning/10">
+                    <AlertCircle className="h-4 w-4 text-warning" />
+                    <AlertDescription className="text-sm text-warning-foreground">
+                      ⚠️ Este valor não será contabilizado como Receita Operacional no DRE
+                    </AlertDescription>
+                  </Alert>
                 )}
 
                 {/* Info sobre classificação */}
