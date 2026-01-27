@@ -102,6 +102,42 @@
 
 ---
 
+## 🔄 SPRINT 3 — GOLDEN PATH (Fluxo Operacional Completo)
+
+### 🧩 TAREFA 1 — Automação de Handover (CRM → Projetos)
+- [x] **src/components/crm/CRMKanbanBoard.tsx**
+  - [x] Detectar quando deal é movido para "fechado"
+  - [x] Abrir modal de criação de projeto
+  - [x] Só atualizar stage após sucesso na criação
+- [x] **src/components/projects/CreateProjectFromDealModal.tsx**
+  - [x] Criar novo componente
+  - [x] Campos pré-preenchidos: Cliente, Valor Mensal
+  - [x] Campo obrigatório: Horas Vendidas
+  - [x] Criar cliente automaticamente se não existir
+  - [x] Redirecionar para /projetos após sucesso
+
+### 🧩 TAREFA 2 — Dashboard Pessoal (Minhas Tarefas)
+- [x] **src/components/tasks/MyActiveTasks.tsx**
+  - [x] Query: tarefas onde assignee_id === user.id && status !== 'done'
+  - [x] Ordenar por deadline ASC
+  - [x] Exibir: Nome, Projeto, Prazo
+  - [x] Botão "Registrar Tempo" → abre TimesheetModal
+- [x] **src/pages/Index.tsx**
+  - [x] Importar MyActiveTasks
+  - [x] Exibir abaixo dos KPIs principais
+
+### 🧩 TAREFA 3 — Indicador de Over-Servicing
+- [x] **src/components/projects/ProjectCard.tsx**
+  - [x] Criar componente de card de projeto
+  - [x] Cálculo: (horas_realizadas / horas_contratadas) * 100
+  - [x] Barra de progresso com cores:
+    - [x] < 80% → verde
+    - [x] 80-100% → amarelo
+    - [x] > 100% → vermelho
+  - [x] Ícone de alerta + tooltip para over-servicing
+
+---
+
 ## ✅ CHECKLIST DE ACEITAÇÃO (SPRINT DONE)
 
 - [x] Hook useClientProfitability funcionando
@@ -118,6 +154,11 @@
 - [x] Modal de transação com Select de projeto
 - [x] Alerta visual para repasse
 - [x] Rota /war-room protegida
+- [x] Deal fechado gera modal de projeto
+- [x] Projeto criado automaticamente
+- [x] Usuário vê suas tarefas ativas
+- [x] Registro de tempo em 1 clique
+- [x] Projetos mostram risco de over-servicing
 
 ---
 
@@ -135,3 +176,6 @@
 | src/App.tsx | ✅ Concluído |
 | src/pages/settings/TeamSettings.tsx | ✅ Concluído |
 | src/components/ProtectedRoute.tsx | ✅ Concluído |
+| src/components/projects/CreateProjectFromDealModal.tsx | ✅ Concluído |
+| src/components/tasks/MyActiveTasks.tsx | ✅ Concluído |
+| src/components/projects/ProjectCard.tsx | ✅ Concluído |
