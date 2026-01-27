@@ -9,13 +9,13 @@ import { MyActiveTasks } from "@/components/tasks/MyActiveTasks";
 import { DollarSign, TrendingUp, Users, Clock, AlertTriangle, Target } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { useCRMKanban } from "@/hooks/useCRMKanban";
+import { usePipelineKPI } from "@/hooks/usePipelineKPI";
 import { useTasks } from "@/hooks/useTasks";
 
 const Index = () => {
   const { clients, isLoading } = useClients();
   const { organization } = useOrganization();
-  const { pipelineValue, isLoading: loadingCRM } = useCRMKanban();
+  const { pipelineValue, isLoading: loadingCRM } = usePipelineKPI();
   const { tasks, lateCount, isLoading: loadingTasks } = useTasks();
 
   // Calculate stats from real data
