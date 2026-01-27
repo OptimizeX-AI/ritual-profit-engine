@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
+import { FinanceiroSkeleton } from "@/components/skeletons/FinanceiroSkeleton";
 import {
   Table,
   TableBody,
@@ -304,6 +305,14 @@ export default function Financeiro() {
 
   const totalContasReceber = contasReceber.reduce((acc, t) => acc + t.value_centavos, 0);
   const totalContasPagar = contasPagar.reduce((acc, t) => acc + t.value_centavos, 0);
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <FinanceiroSkeleton />
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

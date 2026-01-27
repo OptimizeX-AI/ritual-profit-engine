@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import Index from "./pages/Index";
 import CRM from "./pages/CRM";
 import Clientes from "./pages/Clientes";
@@ -94,25 +95,25 @@ const App = () => (
               <Route
                 path="/financeiro"
                 element={
-                  <ProtectedRoute>
+                  <AdminRoute>
                     <Financeiro />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/war-room"
                 element={
-                  <ProtectedRoute requireAdmin>
+                  <AdminRoute>
                     <WarRoom />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/settings/team"
                 element={
-                  <ProtectedRoute requireAdmin>
+                  <AdminRoute>
                     <TeamSettings />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
               <Route
@@ -134,17 +135,17 @@ const App = () => (
               <Route
                 path="/relatorios"
                 element={
-                  <ProtectedRoute>
+                  <AdminRoute>
                     <Relatorios />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/configuracoes"
                 element={
-                  <ProtectedRoute requireAdmin>
+                  <AdminRoute>
                     <Configuracoes />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -3,7 +3,8 @@ import { useCRMKanban } from "@/hooks/useCRMKanban";
 import { useTransactions } from "@/hooks/useTransactions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Target, DollarSign, Users, TrendingUp, Loader2 } from "lucide-react";
+import { GaugeSkeleton } from "@/components/skeletons/DashboardSkeleton";
+import { Target, DollarSign, Users, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function formatCurrency(centavos: number): string {
@@ -138,8 +139,10 @@ export function GoalsGauges() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="grid gap-4 md:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
+          <GaugeSkeleton key={i} />
+        ))}
       </div>
     );
   }
