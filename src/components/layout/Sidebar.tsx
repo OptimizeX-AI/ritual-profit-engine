@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, FolderKanban, DollarSign, Target, Settings, ChevronLeft, BookOpen, Clock, BarChart3, Building2, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, FolderKanban, DollarSign, Target, Settings, ChevronLeft, BookOpen, Clock, BarChart3, Building2, LogOut, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoPvm from "@/assets/logo-pvm.jpeg";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +16,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
+  { title: "War Room", href: "/war-room", icon: Swords },
   { title: "CRM", href: "/crm", icon: Target, badge: "3" },
   { title: "Clientes", href: "/clientes", icon: Building2 },
   { title: "Projetos", href: "/projetos", icon: FolderKanban },
