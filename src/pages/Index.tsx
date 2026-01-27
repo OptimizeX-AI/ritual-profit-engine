@@ -5,6 +5,7 @@ import { ClientProfitability } from "@/components/dashboard/ClientProfitability"
 import { ClientProfitabilityTable } from "@/components/dashboard/ClientProfitabilityTable";
 import { TasksOverview } from "@/components/dashboard/TasksOverview";
 import { DREMini } from "@/components/dashboard/DREMini";
+import { MyActiveTasks } from "@/components/tasks/MyActiveTasks";
 import { DollarSign, TrendingUp, Users, Clock, AlertTriangle, Target } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -83,6 +84,9 @@ const Index = () => {
             variant="profit"
           />
         </div>
+
+        {/* My Active Tasks - Destaque */}
+        <MyActiveTasks />
 
         {/* Charts Row */}
         <div className="grid gap-4 lg:grid-cols-3">

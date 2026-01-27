@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Plus, MoreHorizontal, Building2, DollarSign, Calendar, Loader2, Trash2, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CreateProjectFromDealModal } from "@/components/projects/CreateProjectFromDealModal";
 
 interface DealCardProps {
   deal: CRMDeal;
@@ -186,13 +187,55 @@ export function CRMKanbanBoard() {
     stage: "prospecting",
   });
 
+  // State for deal → project conversion
+  const [dealToConvert, setDealToConvert] = useState<CRMDeal | null>(null);
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
+  const [pendingDragResult, setPendingDragResult] = useState<DropResult | null>(null);
+
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
-    const { draggableId, destination } = result;
+    const { draggableId, destination, source } = result;
     const newStage = destination.droppableId as CRMStageId;
+    const oldStage = source.droppableId as CRMStageId;
 
+    // If moving to closed_won, show project creation modal
+    if (newStage === "closed_won" && oldStage !== "closed_won") {
+      // Find the deal
+      const deal = Object.values(dealsByStage)
+        .flat()
+        .find((d) => d.id === draggableId);
+      
+      if (deal) {
+        setDealToConvert(deal);
+        setPendingDragResult(result);
+        setProjectModalOpen(true);
+        return; // Don't update stage yet
+      }
+    }
+
+    // Normal stage update
     updateStage({ id: draggableId, stage: newStage });
+  };
+
+  const handleProjectCreated = () => {
+    // After project is created, update the deal stage
+    if (pendingDragResult) {
+      const { draggableId, destination } = pendingDragResult;
+      const newStage = destination!.droppableId as CRMStageId;
+      updateStage({ id: draggableId, stage: newStage });
+    }
+    setPendingDragResult(null);
+    setDealToConvert(null);
+  };
+
+  const handleProjectModalClose = (open: boolean) => {
+    if (!open) {
+      // User cancelled, don't update stage
+      setPendingDragResult(null);
+      setDealToConvert(null);
+    }
+    setProjectModalOpen(open);
   };
 
   const handleCreateDeal = () => {
@@ -317,6 +360,14 @@ export function CRMKanbanBoard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Project From Deal Modal */}
+      <CreateProjectFromDealModal
+        deal={dealToConvert}
+        open={projectModalOpen}
+        onOpenChange={handleProjectModalClose}
+        onSuccess={handleProjectCreated}
+      />
     </div>
   );
 }
