@@ -168,9 +168,9 @@
   - [x] Função para calcular comissão
   - [x] Função para criar transação de comissão automática
 
-- [ ] **src/components/crm/CRMKanbanBoard.tsx** (Atualização)
-  - [ ] Ao fechar deal, disparar criação de comissão provisionada
-  - [ ] Vincular vendedor ao deal
+- [x] **src/components/crm/CRMKanbanBoard.tsx** (Atualização Sprint 5)
+  - [x] Ao fechar deal, disparar criação de comissão provisionada
+  - [x] Vincular vendedor ao deal
 
 ### 🧩 TAREFA 3 — DRE Avançado com Drill-Down
 - [x] **src/hooks/useAdvancedDRE.ts**
@@ -196,6 +196,82 @@
 - [ ] **src/pages/Configuracoes.tsx** (Atualização)
   - [ ] Input para % de impostos global
   - [ ] Gestão de categorias customizáveis
+
+---
+
+## 🎯 SPRINT 5 — CRM PROFISSIONAL & WAR ROOM CIRÚRGICO
+
+### 🧩 TAREFA 1 — Atualização do Modelo de Dados
+- [x] **Migração DB: deals**
+  - [x] Campo: origin (ads | indicacao | outbound | organic)
+  - [x] Campo: loss_reason (obrigatório se stage = lost)
+  - [x] Campo: expected_close_date (Date)
+  - [x] Campo: salesperson_id (UUID)
+
+- [x] **Migração DB: monthly_goals**
+  - [x] Tabela: id, organization_id, month, type, target_value, achieved_value
+  - [x] RLS policies configuradas
+
+- [x] **Migração DB: provision_sales_commission function**
+  - [x] Função para provisionar comissão automaticamente
+
+### 🧩 TAREFA 2 — CRM Refatorado
+- [x] **src/hooks/useCRMKanban.ts**
+  - [x] Suporte a novos campos (origin, loss_reason, salesperson_id)
+  - [x] Integração com provisionamento de comissão
+  - [x] Coluna "Perdido" adicionada
+
+- [x] **src/components/crm/CRMKanbanBoard.tsx**
+  - [x] Badge colorido de origem (Ads=Azul, Indicação=Ouro, etc)
+  - [x] Filtro por vendedor (Dropdown)
+  - [x] Modal de motivo de perda ao mover para "Perdido"
+  - [x] Comissão automática ao fechar deal
+
+- [x] **src/components/crm/LossReasonModal.tsx**
+  - [x] Modal para capturar motivo de perda
+  - [x] Opções: Preço, Escopo, Concorrente, etc
+  - [x] Campo de observações opcional
+
+### 🧩 TAREFA 3 — War Room Cirúrgico
+- [x] **src/hooks/useMonthlyGoals.ts**
+  - [x] CRUD para metas mensais
+  - [x] Busca por mês atual
+  - [x] Permissão admin para gerenciar
+
+- [x] **src/hooks/useSalesPerformance.ts**
+  - [x] Agregação de vendas por vendedor
+  - [x] Cálculo de ticket médio
+  - [x] Comissões acumuladas
+
+- [x] **src/hooks/useChurnRadar.ts**
+  - [x] Clientes com contrato vencendo em 60 dias
+  - [x] Classificação de risco (crítico, alto, médio)
+
+- [x] **src/components/warroom/GoalsGauges.tsx**
+  - [x] 3 gauges: Faturamento, Vendas, Leads
+  - [x] Comparação meta vs realizado
+  - [x] Cores dinâmicas por % atingido
+
+- [x] **src/components/warroom/SalesRanking.tsx**
+  - [x] Ranking de vendedores por receita
+  - [x] Colunas: Nome, Deals, Receita, Ticket Médio
+  - [x] Ícones de pódio
+
+- [x] **src/components/warroom/ChurnRadar.tsx**
+  - [x] Lista de clientes em risco
+  - [x] Destaque visual por nível de risco
+  - [x] Total em risco (R$/mês)
+
+- [x] **src/components/warroom/GoalsManager.tsx**
+  - [x] Admin pode criar/editar metas do mês
+  - [x] Tipos: faturamento, leads, vendas_qtd
+
+- [x] **src/pages/WarRoom.tsx**
+  - [x] Bloco A: Gauges de Metas
+  - [x] Bloco B: Ranking de Elite
+  - [x] Bloco C: Radar de Churn
+  - [x] Cards operacionais (Receita, Risco, Gargalos)
+  - [x] Gerenciador de metas (admin only)
 
 ---
 
@@ -233,8 +309,25 @@
 - [x] Margem de Contribuição destacada
 - [x] Rentabilidade ajustada por comissão
 - [ ] Transação filtrável por conta bancária
-- [ ] Comissão automática ao fechar deal
+- [x] Comissão automática ao fechar deal
 - [ ] % de imposto configurável na UI
+
+### Sprint 5 (CRM Profissional & War Room)
+- [x] Campo origin em deals
+- [x] Campo loss_reason em deals
+- [x] Campo salesperson_id em deals
+- [x] Tabela monthly_goals criada
+- [x] Badge de origem no card do deal
+- [x] Filtro por vendedor no CRM
+- [x] Modal de motivo de perda
+- [x] Coluna "Perdido" no Kanban
+- [x] Hook useMonthlyGoals
+- [x] Hook useSalesPerformance
+- [x] Hook useChurnRadar
+- [x] Gauges de metas no War Room
+- [x] Ranking de vendedores
+- [x] Radar de churn (60 dias)
+- [x] Gerenciador de metas (admin)
 
 ---
 
@@ -245,10 +338,11 @@
 | src/hooks/useClientProfitability.ts | ✅ Concluído |
 | src/components/dashboard/ClientProfitabilityTable.tsx | ✅ Concluído |
 | src/pages/Index.tsx | ✅ Concluído |
-| src/hooks/useCRMKanban.ts | ✅ Concluído |
-| src/components/crm/CRMKanbanBoard.tsx | ✅ Concluído |
+| src/hooks/useCRMKanban.ts | ✅ Atualizado Sprint 5 |
+| src/components/crm/CRMKanbanBoard.tsx | ✅ Atualizado Sprint 5 |
+| src/components/crm/LossReasonModal.tsx | ✅ Novo Sprint 5 |
 | src/pages/CRM.tsx | ✅ Concluído |
-| src/pages/WarRoom.tsx | ✅ Concluído |
+| src/pages/WarRoom.tsx | ✅ Atualizado Sprint 5 |
 | src/App.tsx | ✅ Concluído |
 | src/pages/settings/TeamSettings.tsx | ✅ Concluído |
 | src/components/ProtectedRoute.tsx | ✅ Concluído |
@@ -264,6 +358,13 @@
 | src/components/relatorios/AdvancedProfitability.tsx | ✅ Concluído |
 | src/pages/Relatorios.tsx | ✅ Atualizado |
 | src/contexts/OrganizationContext.tsx | ✅ Atualizado |
+| src/hooks/useMonthlyGoals.ts | ✅ Novo Sprint 5 |
+| src/hooks/useSalesPerformance.ts | ✅ Novo Sprint 5 |
+| src/hooks/useChurnRadar.ts | ✅ Novo Sprint 5 |
+| src/components/warroom/GoalsGauges.tsx | ✅ Novo Sprint 5 |
+| src/components/warroom/SalesRanking.tsx | ✅ Novo Sprint 5 |
+| src/components/warroom/ChurnRadar.tsx | ✅ Novo Sprint 5 |
+| src/components/warroom/GoalsManager.tsx | ✅ Novo Sprint 5 |
 
 ---
 
@@ -273,3 +374,4 @@
 |----------|------|-----------|
 | Metas Financeiras | 2026-01-27 | meta_receita_liquida_centavos, teto_custos_fixos_centavos |
 | ERP Avançado | 2026-01-27 | bank_accounts, comissao_percentual, tipo_comissao, imposto_percentual, transaction_categories |
+| CRM Profissional | 2026-01-27 | deals (origin, loss_reason, expected_close_date, salesperson_id), monthly_goals, provision_sales_commission function |
