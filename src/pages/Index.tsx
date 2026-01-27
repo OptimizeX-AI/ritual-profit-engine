@@ -6,6 +6,7 @@ import { ClientProfitabilityTable } from "@/components/dashboard/ClientProfitabi
 import { TasksOverview } from "@/components/dashboard/TasksOverview";
 import { DREMini } from "@/components/dashboard/DREMini";
 import { MyActiveTasks } from "@/components/tasks/MyActiveTasks";
+import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 import { DollarSign, TrendingUp, Users, Clock, AlertTriangle, Target } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -17,6 +18,17 @@ const Index = () => {
   const { organization } = useOrganization();
   const { pipelineValue, isLoading: loadingCRM } = usePipelineKPI();
   const { tasks, lateCount, isLoading: loadingTasks } = useTasks();
+
+  // Show skeleton while loading initial data
+  const initialLoading = isLoading && loadingCRM && loadingTasks;
+
+  if (initialLoading) {
+    return (
+      <MainLayout>
+        <DashboardSkeleton />
+      </MainLayout>
+    );
+  }
 
   // Calculate stats from real data
   const activeClients = clients.filter(

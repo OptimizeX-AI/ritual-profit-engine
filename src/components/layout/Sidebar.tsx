@@ -13,21 +13,22 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   badge?: string;
+  adminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
-  { title: "War Room", href: "/war-room", icon: Swords },
+  { title: "War Room", href: "/war-room", icon: Swords, adminOnly: true },
   { title: "CRM", href: "/crm", icon: Target, badge: "3" },
   { title: "Clientes", href: "/clientes", icon: Building2 },
   { title: "Projetos", href: "/projetos", icon: FolderKanban },
   { title: "Bíblia", href: "/tarefas", icon: BookOpen },
   { title: "Timesheet", href: "/timesheet", icon: Clock },
   { title: "Capacidade", href: "/capacidade", icon: Gauge },
-  { title: "Financeiro", href: "/financeiro", icon: DollarSign },
-  { title: "Relatórios", href: "/relatorios", icon: BarChart3 },
-  { title: "Equipe", href: "/settings/team", icon: Users },
-  { title: "Configurações", href: "/configuracoes", icon: Settings },
+  { title: "Financeiro", href: "/financeiro", icon: DollarSign, adminOnly: true },
+  { title: "Relatórios", href: "/relatorios", icon: BarChart3, adminOnly: true },
+  { title: "Equipe", href: "/settings/team", icon: Users, adminOnly: true },
+  { title: "Configurações", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
 
 export function Sidebar() {
@@ -79,34 +80,36 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4">
         <ul className="space-y-1 px-2">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <li key={item.href}>
-                <Link
-                  to={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
-                    isActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  )}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1">{item.title}</span>
-                      {item.badge && (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
-                          {item.badge}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
+          {navItems
+            .filter((item) => !item.adminOnly || isAdmin)
+            .map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <li key={item.href}>
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+                      isActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1">{item.title}</span>
+                        {item.badge && (
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
+                            {item.badge}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
         </ul>
       </nav>
 

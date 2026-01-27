@@ -38,6 +38,7 @@ import { Plus, MoreHorizontal, Building2, DollarSign, Calendar, Loader2, Trash2,
 import { cn } from "@/lib/utils";
 import { CreateProjectFromDealModal } from "@/components/projects/CreateProjectFromDealModal";
 import { LossReasonModal, LossReasonValue } from "@/components/crm/LossReasonModal";
+import { CRMKanbanSkeleton } from "@/components/skeletons/CRMKanbanSkeleton";
 
 const ORIGIN_CONFIG: Record<DealOrigin, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
   ads: { label: "Ads", color: "bg-blue-500 text-white", icon: Megaphone },
@@ -380,11 +381,7 @@ export function CRMKanbanBoard() {
   ) as Record<CRMStageId, CRMDeal[]>;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <CRMKanbanSkeleton />;
   }
 
   return (

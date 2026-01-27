@@ -3,12 +3,13 @@ import { GoalsGauges } from "@/components/warroom/GoalsGauges";
 import { SalesRanking } from "@/components/warroom/SalesRanking";
 import { ChurnRadar } from "@/components/warroom/ChurnRadar";
 import { GoalsManager } from "@/components/warroom/GoalsManager";
+import { WarRoomSkeleton } from "@/components/skeletons/WarRoomSkeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useProjects } from "@/hooks/useProjects";
 import { useTasks } from "@/hooks/useTasks";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { DollarSign, AlertTriangle, Clock, Loader2, Target } from "lucide-react";
+import { DollarSign, AlertTriangle, Clock, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function formatCurrency(centavos: number): string {
@@ -86,9 +87,7 @@ export default function WarRoom() {
   if (isLoading) {
     return (
       <MainLayout>
-        <div className="p-6 lg:p-8 flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+        <WarRoomSkeleton />
       </MainLayout>
     );
   }
