@@ -106,17 +106,23 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          meta_receita_liquida_centavos: number | null
           name: string
+          teto_custos_fixos_centavos: number | null
         }
         Insert: {
           created_at?: string
           id?: string
+          meta_receita_liquida_centavos?: number | null
           name: string
+          teto_custos_fixos_centavos?: number | null
         }
         Update: {
           created_at?: string
           id?: string
+          meta_receita_liquida_centavos?: number | null
           name?: string
+          teto_custos_fixos_centavos?: number | null
         }
         Relationships: []
       }
