@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, MoreHorizontal, Building2, DollarSign, Calendar, Loader2, Trash2, TrendingUp, User, Filter, Megaphone, Users, Phone, Globe } from "lucide-react";
+import { Plus, MoreHorizontal, Building2, DollarSign, Calendar, Loader2, Trash2, TrendingUp, User, Filter, Megaphone, Users, Phone, Globe, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CreateProjectFromDealModal } from "@/components/projects/CreateProjectFromDealModal";
 import { LossReasonModal, LossReasonValue } from "@/components/crm/LossReasonModal";
@@ -49,9 +49,10 @@ interface DealCardProps {
   deal: CRMDeal;
   index: number;
   onDelete: (id: string) => void;
+  onEdit: (deal: CRMDeal) => void;
 }
 
-function DealCard({ deal, index, onDelete }: DealCardProps) {
+function DealCard({ deal, index, onDelete, onEdit }: DealCardProps) {
   const originConfig = ORIGIN_CONFIG[deal.origin || "organic"];
   const OriginIcon = originConfig.icon;
 
@@ -79,6 +80,10 @@ function DealCard({ deal, index, onDelete }: DealCardProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(deal)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Editar
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive"
                   onClick={() => onDelete(deal.id)}
@@ -136,10 +141,11 @@ interface StageColumnProps {
   label: string;
   deals: CRMDeal[];
   onDelete: (id: string) => void;
+  onEdit: (deal: CRMDeal) => void;
   onAddClick: (stageId: CRMStageId) => void;
 }
 
-function StageColumn({ stageId, label, deals, onDelete, onAddClick }: StageColumnProps) {
+function StageColumn({ stageId, label, deals, onDelete, onEdit, onAddClick }: StageColumnProps) {
   const stageValue = deals.reduce((sum, d) => sum + d.value_centavos, 0);
   
   const colorMap: Record<CRMStageId, string> = {
@@ -178,7 +184,7 @@ function StageColumn({ stageId, label, deals, onDelete, onAddClick }: StageColum
             )}
           >
             {deals.map((deal, index) => (
-              <DealCard key={deal.id} deal={deal} index={index} onDelete={onDelete} />
+              <DealCard key={deal.id} deal={deal} index={index} onDelete={onDelete} onEdit={onEdit} />
             ))}
             {provided.placeholder}
           </div>
@@ -206,10 +212,12 @@ export function CRMKanbanBoard() {
     pipelineValue,
     isLoading,
     updateStage,
+    updateDeal,
     createDeal,
     deleteDeal,
     provisionCommission,
     isCreating,
+    isUpdating,
   } = useCRMKanban();
 
   const { members } = useTeamMembers();
@@ -223,6 +231,10 @@ export function CRMKanbanBoard() {
     stage: "prospecting",
     origin: "organic",
   });
+
+  // Edit deal state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [dealToEdit, setDealToEdit] = useState<CRMDeal | null>(null);
 
   // Filter by salesperson
   const [salespersonFilter, setSalespersonFilter] = useState<string>("all");
@@ -334,6 +346,28 @@ export function CRMKanbanBoard() {
     setDialogOpen(true);
   };
 
+  const handleEditClick = (deal: CRMDeal) => {
+    setDealToEdit(deal);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateDeal = () => {
+    if (!dealToEdit) return;
+    updateDeal({
+      id: dealToEdit.id,
+      company: dealToEdit.company,
+      contact: dealToEdit.contact,
+      value_centavos: dealToEdit.value_centavos,
+      probability: dealToEdit.probability,
+      origin: dealToEdit.origin,
+      salesperson_id: dealToEdit.salesperson_id,
+      expected_close_date: dealToEdit.expected_close_date,
+      notes: dealToEdit.notes,
+    });
+    setEditDialogOpen(false);
+    setDealToEdit(null);
+  };
+
   // Filter deals by salesperson
   const filteredDealsByStage = Object.fromEntries(
     Object.entries(dealsByStage).map(([stage, stageDeals]) => [
@@ -399,6 +433,7 @@ export function CRMKanbanBoard() {
               label={stage.label}
               deals={filteredDealsByStage[stage.id]}
               onDelete={deleteDeal}
+              onEdit={handleEditClick}
               onAddClick={handleAddClick}
             />
           ))}
@@ -511,6 +546,125 @@ export function CRMKanbanBoard() {
             <Button onClick={handleCreateDeal} disabled={isCreating || !newDeal.company}>
               {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Criar Negócio
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Deal Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={(open) => {
+        setEditDialogOpen(open);
+        if (!open) setDealToEdit(null);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Negócio</DialogTitle>
+            <DialogDescription>Atualize as informações do negócio.</DialogDescription>
+          </DialogHeader>
+          {dealToEdit && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-company">Empresa</Label>
+                <Input
+                  id="edit-company"
+                  value={dealToEdit.company}
+                  onChange={(e) => setDealToEdit({ ...dealToEdit, company: e.target.value })}
+                  placeholder="Ex: Empresa ABC Ltda"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-contact">Contato</Label>
+                <Input
+                  id="edit-contact"
+                  value={dealToEdit.contact || ""}
+                  onChange={(e) => setDealToEdit({ ...dealToEdit, contact: e.target.value })}
+                  placeholder="Ex: João Silva"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-value">Valor Mensal (R$)</Label>
+                  <Input
+                    id="edit-value"
+                    type="number"
+                    value={(dealToEdit.value_centavos || 0) / 100}
+                    onChange={(e) =>
+                      setDealToEdit({
+                        ...dealToEdit,
+                        value_centavos: Math.round(parseFloat(e.target.value || "0") * 100),
+                      })
+                    }
+                    placeholder="0,00"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-probability">Probabilidade (%)</Label>
+                  <Input
+                    id="edit-probability"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={dealToEdit.probability}
+                    onChange={(e) =>
+                      setDealToEdit({
+                        ...dealToEdit,
+                        probability: parseInt(e.target.value || "0"),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-origin">Origem do Lead</Label>
+                  <Select
+                    value={dealToEdit.origin}
+                    onValueChange={(v) => setDealToEdit({ ...dealToEdit, origin: v as DealOrigin })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(ORIGIN_CONFIG).map(([key, config]) => (
+                        <SelectItem key={key} value={key}>
+                          {config.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-salesperson">Vendedor</Label>
+                  <Select
+                    value={dealToEdit.salesperson_id || "none"}
+                    onValueChange={(v) => setDealToEdit({ ...dealToEdit, salesperson_id: v === "none" ? null : v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      {members.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setEditDialogOpen(false);
+              setDealToEdit(null);
+            }}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateDeal} disabled={isUpdating || !dealToEdit?.company}>
+              {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar Alterações
             </Button>
           </DialogFooter>
         </DialogContent>
