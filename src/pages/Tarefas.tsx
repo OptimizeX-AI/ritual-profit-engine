@@ -462,16 +462,41 @@ export default function Tarefas() {
                         {task.assignee?.name || <span className="text-destructive text-sm italic">Sem responsável</span>}
                       </TableCell>
                       <TableCell>
-                        <span
-                          className={cn(
-                            "text-sm",
-                            effectiveStatus === "late" && "text-loss font-medium"
-                          )}
-                        >
-                          {task.deadline ? formatDate(task.deadline, effectiveStatus) : (
-                            <span className="text-destructive italic">Sem prazo</span>
-                          )}
-                        </span>
+                        {effectiveStatus === "waiting_approval" ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1.5">
+                                <Badge variant="outline" className="gap-1 bg-warning/10 text-warning border-warning/30 font-medium">
+                                  <Pause className="h-3 w-3" />
+                                  Pausado
+                                </Badge>
+                                {task.deadline && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(task.deadline).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                                  </span>
+                                )}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs">
+                              <p className="text-xs">
+                                <strong>SLA Pausado (Cliente)</strong><br />
+                                O tempo neste status não impacta o SLA da equipe. 
+                                A responsabilidade pelo atraso está com o cliente.
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span
+                            className={cn(
+                              "text-sm",
+                              effectiveStatus === "late" && "text-loss font-medium"
+                            )}
+                          >
+                            {task.deadline ? formatDate(task.deadline, effectiveStatus) : (
+                              <span className="text-destructive italic">Sem prazo</span>
+                            )}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Select
