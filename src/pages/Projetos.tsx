@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,13 +43,21 @@ import {
   CheckCircle2,
   FolderKanban,
   TrendingUp,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useProjects } from "@/hooks/useProjects";
+import { useProjects, ScopeType } from "@/hooks/useProjects";
 import { useClients } from "@/hooks/useClients";
 import { useProjectStats } from "@/hooks/useProjectStats";
 
+const SCOPE_OPTIONS: { value: ScopeType; label: string }[] = [
+  { value: "horas_fechadas", label: "Horas Fechadas" },
+  { value: "fee_mensal", label: "Fee Mensal" },
+  { value: "pontual", label: "Projeto Pontual" },
+];
+
 export default function Projetos() {
+  const navigate = useNavigate();
   const { projects, isLoading, createProject, isCreating } = useProjects();
   const { clients } = useClients();
   const { projectStats, isLoading: isLoadingStats } = useProjectStats();
@@ -59,12 +68,16 @@ export default function Projetos() {
     client_id: "",
     name: "",
     horas_contratadas: 0,
+    scope_type: "fee_mensal" as ScopeType,
   });
 
   const handleCreateProject = () => {
     if (!newProject.name || !newProject.client_id) return;
-    createProject(newProject);
-    setNewProject({ client_id: "", name: "", horas_contratadas: 0 });
+    createProject({
+      ...newProject,
+      initial_budget_hours: newProject.horas_contratadas,
+    });
+    setNewProject({ client_id: "", name: "", horas_contratadas: 0, scope_type: "fee_mensal" });
     setDialogOpen(false);
   };
 
@@ -163,6 +176,26 @@ export default function Projetos() {
                     placeholder="Ex: 40"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="scope">Tipo de Escopo</Label>
+                  <Select
+                    value={newProject.scope_type}
+                    onValueChange={(v) =>
+                      setNewProject({ ...newProject, scope_type: v as ScopeType })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SCOPE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>
@@ -227,10 +260,11 @@ export default function Projetos() {
                 <Card
                   key={project.id}
                   className={cn(
-                    "transition-all duration-200 hover:shadow-md",
+                    "transition-all duration-200 hover:shadow-md cursor-pointer",
                     status === "critical" && "border-loss/50 bg-loss/5",
                     status === "warning" && "border-warning/50 bg-warning/5"
                   )}
+                  onClick={() => navigate(`/projetos/${project.id}`)}
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">

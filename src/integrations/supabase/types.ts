@@ -284,27 +284,77 @@ export type Database = {
           },
         ]
       }
+      project_addendums: {
+        Row: {
+          approved_by_client: boolean
+          cost_added_centavos: number
+          created_at: string
+          created_by: string | null
+          description: string
+          hours_added: number
+          id: string
+          project_id: string
+        }
+        Insert: {
+          approved_by_client?: boolean
+          cost_added_centavos?: number
+          created_at?: string
+          created_by?: string | null
+          description: string
+          hours_added?: number
+          id?: string
+          project_id: string
+        }
+        Update: {
+          approved_by_client?: boolean
+          cost_added_centavos?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          hours_added?: number
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_addendums_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           client_id: string
           created_at: string
+          current_budget_hours: number
           horas_contratadas: number | null
           id: string
+          initial_budget_hours: number
           name: string
+          scope_type: string
         }
         Insert: {
           client_id: string
           created_at?: string
+          current_budget_hours?: number
           horas_contratadas?: number | null
           id?: string
+          initial_budget_hours?: number
           name: string
+          scope_type?: string
         }
         Update: {
           client_id?: string
           created_at?: string
+          current_budget_hours?: number
           horas_contratadas?: number | null
           id?: string
+          initial_budget_hours?: number
           name?: string
+          scope_type?: string
         }
         Relationships: [
           {
@@ -326,9 +376,11 @@ export type Database = {
           id: string
           organization_id: string
           project_id: string | null
+          sla_paused_at: string | null
           status: string
           time_spent_minutes: number
           title: string
+          total_paused_minutes: number
           updated_at: string
         }
         Insert: {
@@ -340,9 +392,11 @@ export type Database = {
           id?: string
           organization_id: string
           project_id?: string | null
+          sla_paused_at?: string | null
           status?: string
           time_spent_minutes?: number
           title: string
+          total_paused_minutes?: number
           updated_at?: string
         }
         Update: {
@@ -354,9 +408,11 @@ export type Database = {
           id?: string
           organization_id?: string
           project_id?: string | null
+          sla_paused_at?: string | null
           status?: string
           time_spent_minutes?: number
           title?: string
+          total_paused_minutes?: number
           updated_at?: string
         }
         Relationships: [
