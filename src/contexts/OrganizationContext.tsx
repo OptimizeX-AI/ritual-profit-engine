@@ -16,6 +16,7 @@ interface Organization {
   created_at: string;
   meta_receita_liquida_centavos: number | null;
   teto_custos_fixos_centavos: number | null;
+  imposto_percentual: number | null;
 }
 
 interface UserRole {

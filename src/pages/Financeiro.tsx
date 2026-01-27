@@ -48,6 +48,7 @@ import {
   Shield,
   TrendingUp,
   TrendingDown,
+  Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -62,6 +63,9 @@ import {
 } from "@/hooks/useTransactions";
 import { useProjects } from "@/hooks/useProjects";
 import { useClients } from "@/hooks/useClients";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { BankAccountsManager } from "@/components/financeiro/BankAccountsManager";
+import { BankAccountSelector } from "@/components/financeiro/BankAccountSelector";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -720,6 +724,10 @@ export default function Financeiro() {
             <TabsTrigger value="transacoes">Transações</TabsTrigger>
             <TabsTrigger value="contas">Contas a Pagar/Receber</TabsTrigger>
             <TabsTrigger value="fluxo">Fluxo de Caixa</TabsTrigger>
+            <TabsTrigger value="bancos" className="gap-2">
+              <Landmark className="h-4 w-4" />
+              Contas Bancárias
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="transacoes" className="mt-4 space-y-4">
@@ -1136,6 +1144,11 @@ export default function Financeiro() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Tab: Contas Bancárias */}
+          <TabsContent value="bancos" className="mt-4">
+            <BankAccountsManager />
           </TabsContent>
         </Tabs>
       </div>

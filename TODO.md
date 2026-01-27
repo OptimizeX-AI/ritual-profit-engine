@@ -138,8 +138,70 @@
 
 ---
 
+## 💰 SPRINT 4 — ERP FINANCEIRO AVANÇADO (Auditoria Elite)
+
+### 🧩 TAREFA 1 — Multi-Contas Bancárias
+- [x] **Migração DB: bank_accounts**
+  - [x] Tabela: id, organization_id, name, banco, agencia, conta, saldo_inicial, saldo_atual, is_default
+  - [x] RLS policies configuradas
+  - [x] Trigger para atualizar saldo automaticamente
+
+- [x] **src/hooks/useBankAccounts.ts**
+  - [x] CRUD completo para contas bancárias
+  - [x] Saldo consolidado calculado
+  
+- [x] **src/components/financeiro/BankAccountSelector.tsx**
+  - [x] Dropdown com opção "Consolidado"
+  - [x] Exibir saldo de cada conta
+  
+- [x] **src/components/financeiro/BankAccountsManager.tsx**
+  - [x] CRUD de contas bancárias
+  - [x] Exibir saldo atual de cada conta
+  - [x] Indicador de conta padrão
+
+### 🧩 TAREFA 2 — Sistema de Comissões
+- [x] **Migração DB: profiles**
+  - [x] Campo: comissao_percentual (DECIMAL)
+  - [x] Campo: tipo_comissao (sobre_faturamento | sobre_margem)
+
+- [x] **src/hooks/useCommissions.ts**
+  - [x] Função para calcular comissão
+  - [x] Função para criar transação de comissão automática
+
+- [ ] **src/components/crm/CRMKanbanBoard.tsx** (Atualização)
+  - [ ] Ao fechar deal, disparar criação de comissão provisionada
+  - [ ] Vincular vendedor ao deal
+
+### 🧩 TAREFA 3 — DRE Avançado com Drill-Down
+- [x] **src/hooks/useAdvancedDRE.ts**
+  - [x] Estrutura contábil rígida (7 linhas)
+  - [x] Categorização: Variável, Fixo, Investimento
+  - [x] Cálculo de impostos configurável
+
+- [x] **src/components/relatorios/AdvancedDRE.tsx**
+  - [x] Explosão de categorias (Drill-Down)
+  - [x] Destaque para Margem de Contribuição
+  - [x] Cores dinâmicas para resultado
+
+### 🧩 TAREFA 4 — Rentabilidade com Comissão
+- [x] **src/components/relatorios/AdvancedProfitability.tsx**
+  - [x] Margem ajustada (desconta comissão)
+  - [x] Visual de "projeto já nasce com 10% a menos"
+  - [x] Ordenação por pior margem
+
+### 🧩 TAREFA 5 — Configurações Financeiras
+- [x] **Migração DB: organizations**
+  - [x] Campo: imposto_percentual (DECIMAL)
+
+- [ ] **src/pages/Configuracoes.tsx** (Atualização)
+  - [ ] Input para % de impostos global
+  - [ ] Gestão de categorias customizáveis
+
+---
+
 ## ✅ CHECKLIST DE ACEITAÇÃO (SPRINT DONE)
 
+### Sprint 1-3
 - [x] Hook useClientProfitability funcionando
 - [x] Margem real exibida por cliente
 - [x] CRM com Kanban arrastável
@@ -160,9 +222,23 @@
 - [x] Registro de tempo em 1 clique
 - [x] Projetos mostram risco de over-servicing
 
+### Sprint 4 (ERP Avançado)
+- [x] Tabela bank_accounts criada com RLS
+- [x] Hook useBankAccounts implementado
+- [x] Componente BankAccountsManager funcional
+- [x] Campos de comissão em profiles
+- [x] Hook useCommissions implementado
+- [x] DRE com estrutura contábil rígida
+- [x] Drill-down de categorias funcionando
+- [x] Margem de Contribuição destacada
+- [x] Rentabilidade ajustada por comissão
+- [ ] Transação filtrável por conta bancária
+- [ ] Comissão automática ao fechar deal
+- [ ] % de imposto configurável na UI
+
 ---
 
-## 📊 Status
+## 📊 Status de Arquivos
 
 | Arquivo | Status |
 |---------|--------|
@@ -179,3 +255,21 @@
 | src/components/projects/CreateProjectFromDealModal.tsx | ✅ Concluído |
 | src/components/tasks/MyActiveTasks.tsx | ✅ Concluído |
 | src/components/projects/ProjectCard.tsx | ✅ Concluído |
+| src/hooks/useBankAccounts.ts | ✅ Concluído |
+| src/components/financeiro/BankAccountSelector.tsx | ✅ Concluído |
+| src/components/financeiro/BankAccountsManager.tsx | ✅ Concluído |
+| src/hooks/useCommissions.ts | ✅ Concluído |
+| src/hooks/useAdvancedDRE.ts | ✅ Concluído |
+| src/components/relatorios/AdvancedDRE.tsx | ✅ Concluído |
+| src/components/relatorios/AdvancedProfitability.tsx | ✅ Concluído |
+| src/pages/Relatorios.tsx | ✅ Atualizado |
+| src/contexts/OrganizationContext.tsx | ✅ Atualizado |
+
+---
+
+## 🗄️ Migrações de Banco de Dados
+
+| Migração | Data | Descrição |
+|----------|------|-----------|
+| Metas Financeiras | 2026-01-27 | meta_receita_liquida_centavos, teto_custos_fixos_centavos |
+| ERP Avançado | 2026-01-27 | bank_accounts, comissao_percentual, tipo_comissao, imposto_percentual, transaction_categories |
