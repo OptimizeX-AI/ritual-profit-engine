@@ -19,6 +19,7 @@ import TeamSettings from "./pages/settings/TeamSettings";
 import Timesheet from "./pages/Timesheet";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
+import Capacidade from "./pages/Capacidade";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -119,6 +120,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Timesheet />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/capacidade"
+                element={
+                  <ProtectedRoute>
+                    <Capacidade />
                   </ProtectedRoute>
                 }
               />

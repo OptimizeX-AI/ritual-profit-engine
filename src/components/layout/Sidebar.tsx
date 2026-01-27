@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, FolderKanban, DollarSign, Target, Settings, ChevronLeft, BookOpen, Clock, BarChart3, Building2, LogOut, Swords } from "lucide-react";
+import { LayoutDashboard, Users, FolderKanban, DollarSign, Target, Settings, ChevronLeft, BookOpen, Clock, BarChart3, Building2, LogOut, Swords, Gauge } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoPvm from "@/assets/logo-pvm.jpeg";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "./NotificationBell";
 
 interface NavItem {
   title: string;
@@ -22,6 +23,7 @@ const navItems: NavItem[] = [
   { title: "Projetos", href: "/projetos", icon: FolderKanban },
   { title: "Bíblia", href: "/tarefas", icon: BookOpen },
   { title: "Timesheet", href: "/timesheet", icon: Clock },
+  { title: "Capacidade", href: "/capacidade", icon: Gauge },
   { title: "Financeiro", href: "/financeiro", icon: DollarSign },
   { title: "Relatórios", href: "/relatorios", icon: BarChart3 },
   { title: "Equipe", href: "/settings/team", icon: Users },
@@ -50,7 +52,7 @@ export function Sidebar() {
         collapsed ? "w-16" : "w-64"
       )}
     >
-      {/* Logo */}
+      {/* Logo & Notification */}
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
         {!collapsed && (
           <div className="flex items-center gap-3">
@@ -63,12 +65,15 @@ export function Sidebar() {
             </div>
           </div>
         )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
-        >
-          <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
-        </button>
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="flex h-8 w-8 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+          >
+            <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
+          </button>
+        </div>
       </div>
 
       {/* Navigation */}
