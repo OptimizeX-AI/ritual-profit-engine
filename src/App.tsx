@@ -13,6 +13,7 @@ import Projetos from "./pages/Projetos";
 import Tarefas from "./pages/Tarefas";
 import Financeiro from "./pages/Financeiro";
 import WarRoom from "./pages/WarRoom";
+import TeamSettings from "./pages/settings/TeamSettings";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -79,8 +80,16 @@ const App = () => (
               <Route
                 path="/war-room"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireAdmin>
                     <WarRoom />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings/team"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <TeamSettings />
                   </ProtectedRoute>
                 }
               />
