@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, FolderKanban, DollarSign, Target, Settings, ChevronLeft, BookOpen, Clock, BarChart3, Building2, LogOut, Swords, Gauge } from "lucide-react";
+import { LayoutDashboard, Users, FolderKanban, DollarSign, Target, Settings, ChevronLeft, BookOpen, Clock, BarChart3, Building2, LogOut, Swords, Gauge, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoPvm from "@/assets/logo-pvm.jpeg";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "./NotificationBell";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface NavItem {
   title: string;
@@ -14,18 +16,19 @@ interface NavItem {
   icon: React.ElementType;
   badge?: string;
   adminOnly?: boolean;
+  onboardingId?: string;
 }
 
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
-  { title: "War Room", href: "/war-room", icon: Swords, adminOnly: true },
-  { title: "CRM", href: "/crm", icon: Target, badge: "3" },
+  { title: "War Room", href: "/war-room", icon: Swords, adminOnly: true, onboardingId: "nav-warroom" },
+  { title: "CRM", href: "/crm", icon: Target, badge: "3", onboardingId: "nav-crm" },
   { title: "Clientes", href: "/clientes", icon: Building2 },
-  { title: "Projetos", href: "/projetos", icon: FolderKanban },
-  { title: "Bíblia", href: "/tarefas", icon: BookOpen },
+  { title: "Projetos", href: "/projetos", icon: FolderKanban, onboardingId: "nav-projetos" },
+  { title: "Bíblia", href: "/tarefas", icon: BookOpen, onboardingId: "nav-tarefas" },
   { title: "Timesheet", href: "/timesheet", icon: Clock },
   { title: "Capacidade", href: "/capacidade", icon: Gauge },
-  { title: "Financeiro", href: "/financeiro", icon: DollarSign, adminOnly: true },
+  { title: "Financeiro", href: "/financeiro", icon: DollarSign, adminOnly: true, onboardingId: "nav-financeiro" },
   { title: "Relatórios", href: "/relatorios", icon: BarChart3, adminOnly: true },
   { title: "Equipe", href: "/settings/team", icon: Users, adminOnly: true },
   { title: "Configurações", href: "/configuracoes", icon: Settings, adminOnly: true },
@@ -36,6 +39,7 @@ export function Sidebar() {
   const location = useLocation();
   const { signOut } = useAuth();
   const { profile, organization, isAdmin } = useOrganization();
+  const { restartOnboarding, hasCompleted } = useOnboarding();
 
   const getInitials = (name: string) => {
     return name
@@ -85,7 +89,7 @@ export function Sidebar() {
             .map((item) => {
               const isActive = location.pathname === item.href;
               return (
-                <li key={item.href}>
+                <li key={item.href} data-onboarding={item.onboardingId}>
                   <Link
                     to={item.href}
                     className={cn(
@@ -130,15 +134,33 @@ export function Sidebar() {
                 </span>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start gap-2 text-sidebar-foreground/70"
-              onClick={signOut}
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
+            <div className="flex gap-2">
+              {hasCompleted && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1 justify-start gap-2 text-sidebar-foreground/70"
+                      onClick={restartOnboarding}
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                      Tour
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Ver tour novamente</TooltipContent>
+                </Tooltip>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-1 justify-start gap-2 text-sidebar-foreground/70"
+                onClick={signOut}
+              >
+                <LogOut className="h-4 w-4" />
+                Sair
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">

@@ -52,7 +52,7 @@ const Index = () => {
         </div>
 
         {/* KPI Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div data-onboarding="dashboard-kpis" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <KPICard
             title="Receita Mensal"
             value={isLoading ? "..." : `R$ ${(totalRevenue / 100).toLocaleString("pt-BR")}`}
@@ -98,7 +98,9 @@ const Index = () => {
         </div>
 
         {/* My Active Tasks - Destaque */}
-        <MyActiveTasks />
+        <div data-onboarding="my-tasks">
+          <MyActiveTasks />
+        </div>
 
         {/* Charts Row */}
         <div className="grid gap-4 lg:grid-cols-3">
