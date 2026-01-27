@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, FolderKanban, DollarSign, Target, Settings, ChevronLeft, BookOpen, Clock, BarChart3, Building2, LogOut, Swords, Gauge, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Users, FolderKanban, DollarSign, Target, Settings, ChevronLeft, BookOpen, Clock, BarChart3, Building2, LogOut, Swords, Gauge, HelpCircle, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoPvm from "@/assets/logo-pvm.jpeg";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,7 @@ import { useOnboarding } from "@/contexts/OnboardingContext";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "./NotificationBell";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface NavItem {
   title: string;
@@ -121,19 +122,25 @@ export function Sidebar() {
       <div className="border-t border-sidebar-border p-4">
         {!collapsed ? (
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
-                {profile?.name ? getInitials(profile.name) : "U"}
+            <Link to="/meu-perfil" className="block">
+              <div className="flex items-center gap-3 p-2 -mx-2 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={(profile as any)?.avatar_url} alt={profile?.name || "Avatar"} />
+                  <AvatarFallback className="bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
+                    {profile?.name ? getInitials(profile.name) : "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className="text-sm font-medium text-sidebar-foreground truncate">
+                    {profile?.name || "Usuário"}
+                  </span>
+                  <span className="text-xs text-sidebar-foreground/60">
+                    {isAdmin ? "Administrador" : "Usuário"}
+                  </span>
+                </div>
+                <UserCircle className="h-4 w-4 text-sidebar-foreground/50" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-sidebar-foreground">
-                  {profile?.name || "Usuário"}
-                </span>
-                <span className="text-xs text-sidebar-foreground/60">
-                  {isAdmin ? "Administrador" : "Usuário"}
-                </span>
-              </div>
-            </div>
+            </Link>
             <div className="flex gap-2">
               {hasCompleted && (
                 <Tooltip>
@@ -164,9 +171,14 @@ export function Sidebar() {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
-              {profile?.name ? getInitials(profile.name) : "U"}
-            </div>
+            <Link to="/meu-perfil">
+              <Avatar className="h-9 w-9">
+                <AvatarImage src={(profile as any)?.avatar_url} alt={profile?.name || "Avatar"} />
+                <AvatarFallback className="bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
+                  {profile?.name ? getInitials(profile.name) : "U"}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={signOut}>
               <LogOut className="h-4 w-4" />
             </Button>
