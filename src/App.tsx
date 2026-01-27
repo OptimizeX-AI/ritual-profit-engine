@@ -12,6 +12,7 @@ import Clientes from "./pages/Clientes";
 import Projetos from "./pages/Projetos";
 import Tarefas from "./pages/Tarefas";
 import Financeiro from "./pages/Financeiro";
+import WarRoom from "./pages/WarRoom";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -72,6 +73,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Financeiro />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/war-room"
+                element={
+                  <ProtectedRoute>
+                    <WarRoom />
                   </ProtectedRoute>
                 }
               />
