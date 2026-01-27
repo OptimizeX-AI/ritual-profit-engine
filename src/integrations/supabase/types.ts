@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      bank_accounts: {
+        Row: {
+          agencia: string | null
+          banco: string | null
+          conta: string | null
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          organization_id: string
+          saldo_atual_centavos: number
+          saldo_inicial_centavos: number
+          updated_at: string
+        }
+        Insert: {
+          agencia?: string | null
+          banco?: string | null
+          conta?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          organization_id: string
+          saldo_atual_centavos?: number
+          saldo_inicial_centavos?: number
+          updated_at?: string
+        }
+        Update: {
+          agencia?: string | null
+          banco?: string | null
+          conta?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          organization_id?: string
+          saldo_atual_centavos?: number
+          saldo_inicial_centavos?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           contrato_fim: string | null
@@ -106,6 +156,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          imposto_percentual: number | null
           meta_receita_liquida_centavos: number | null
           name: string
           teto_custos_fixos_centavos: number | null
@@ -113,6 +164,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          imposto_percentual?: number | null
           meta_receita_liquida_centavos?: number | null
           name: string
           teto_custos_fixos_centavos?: number | null
@@ -120,6 +172,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          imposto_percentual?: number | null
           meta_receita_liquida_centavos?: number | null
           name?: string
           teto_custos_fixos_centavos?: number | null
@@ -128,25 +181,31 @@ export type Database = {
       }
       profiles: {
         Row: {
+          comissao_percentual: number | null
           created_at: string
           custo_hora_centavos: number | null
           id: string
           name: string
           organization_id: string | null
+          tipo_comissao: string | null
         }
         Insert: {
+          comissao_percentual?: number | null
           created_at?: string
           custo_hora_centavos?: number | null
           id: string
           name: string
           organization_id?: string | null
+          tipo_comissao?: string | null
         }
         Update: {
+          comissao_percentual?: number | null
           created_at?: string
           custo_hora_centavos?: number | null
           id?: string
           name?: string
           organization_id?: string | null
+          tipo_comissao?: string | null
         }
         Relationships: [
           {
@@ -264,9 +323,56 @@ export type Database = {
           },
         ]
       }
+      transaction_categories: {
+        Row: {
+          cost_classification: string | null
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          parent_id: string | null
+          type: string
+        }
+        Insert: {
+          cost_classification?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+          parent_id?: string | null
+          type: string
+        }
+        Update: {
+          cost_classification?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          parent_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
+          bank_account_id: string | null
           category: string
+          commission_transaction_id: string | null
           competence_date: string | null
           cost_type: string
           created_at: string
@@ -279,13 +385,16 @@ export type Database = {
           organization_id: string
           payment_date: string | null
           project_id: string | null
+          salesperson_id: string | null
           status: string
           type: string
           updated_at: string
           value_centavos: number
         }
         Insert: {
+          bank_account_id?: string | null
           category: string
+          commission_transaction_id?: string | null
           competence_date?: string | null
           cost_type?: string
           created_at?: string
@@ -298,13 +407,16 @@ export type Database = {
           organization_id: string
           payment_date?: string | null
           project_id?: string | null
+          salesperson_id?: string | null
           status?: string
           type: string
           updated_at?: string
           value_centavos: number
         }
         Update: {
+          bank_account_id?: string | null
           category?: string
+          commission_transaction_id?: string | null
           competence_date?: string | null
           cost_type?: string
           created_at?: string
@@ -317,12 +429,27 @@ export type Database = {
           organization_id?: string
           payment_date?: string | null
           project_id?: string | null
+          salesperson_id?: string | null
           status?: string
           type?: string
           updated_at?: string
           value_centavos?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "transactions_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_commission_transaction_id_fkey"
+            columns: ["commission_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "transactions_organization_id_fkey"
             columns: ["organization_id"]
@@ -335,6 +462,20 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_salesperson_id_fkey"
+            columns: ["salesperson_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_salesperson_id_fkey"
+            columns: ["salesperson_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
             referencedColumns: ["id"]
           },
         ]
@@ -390,6 +531,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_commission: {
+        Args: { deal_value: number; salesperson_id: string }
+        Returns: number
+      }
       can_view_custo_hora: { Args: never; Returns: boolean }
       get_user_organization_id: { Args: { _user_id: string }; Returns: string }
       has_role: {

@@ -28,6 +28,8 @@ import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { useTasks } from "@/hooks/useTasks";
 import { useProjects } from "@/hooks/useProjects";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { AdvancedDRE } from "@/components/relatorios/AdvancedDRE";
+import { AdvancedProfitability } from "@/components/relatorios/AdvancedProfitability";
 import { 
   BarChart3, 
   TrendingUp, 
@@ -210,204 +212,14 @@ export default function Relatorios() {
             </TabsTrigger>
           </TabsList>
 
-          {/* ==================== TAB A: DRE ==================== */}
+          {/* ==================== TAB A: DRE AVANÇADO ==================== */}
           <TabsContent value="dre" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Demonstrativo de Resultados do Exercício (DRE)</CardTitle>
-                <CardDescription>
-                  Visão gerencial — estrutura de cascata financeira
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Linha 1: Faturamento Bruto */}
-                  <DRELine
-                    label="(+) Faturamento Bruto"
-                    value={dreData.faturamentoBruto}
-                    icon={ArrowUp}
-                    variant="income"
-                  />
-
-                  {/* Linha 2: Repasses */}
-                  <DRELine
-                    label="(-) Repasses de Mídia"
-                    value={-dreData.repasses}
-                    icon={Minus}
-                    variant="repasse"
-                    note="Dinheiro que não é nosso"
-                  />
-
-                  {/* Linha 3: Receita Líquida */}
-                  <div className="border-t-2 border-primary pt-4">
-                    <DRELine
-                      label="(=) RECEITA LÍQUIDA"
-                      value={dreData.receitaLiquida}
-                      icon={DollarSign}
-                      variant="highlight"
-                      note="Base de cálculo real"
-                    />
-                  </div>
-
-                  {/* Linha 4: Custos Variáveis */}
-                  <DRELine
-                    label="(-) Custos Variáveis (Est. 15%)"
-                    value={-dreData.custosVariaveis}
-                    icon={ArrowDown}
-                    variant="expense"
-                    note="Impostos, Comissões"
-                  />
-
-                  {/* Linha 5: Margem de Contribuição */}
-                  <DRELine
-                    label="(=) Margem de Contribuição"
-                    value={dreData.margemContribuicao}
-                    icon={TrendingUp}
-                    variant="neutral"
-                  />
-
-                  {/* Linha 6: Custos Fixos */}
-                  <DRELine
-                    label="(-) Custos Fixos"
-                    value={-dreData.despesasFixas}
-                    icon={ArrowDown}
-                    variant="expense"
-                    note="Salários, Aluguel, Infraestrutura"
-                  />
-
-                  {/* Linha 7: EBITDA */}
-                  <div className="border-t-4 border-primary pt-4 mt-4">
-                    <div className={cn(
-                      "p-4 rounded-lg",
-                      dreData.ebitda >= 0 ? "bg-green-50 dark:bg-green-950" : "bg-red-50 dark:bg-red-950"
-                    )}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {dreData.ebitda >= 0 ? (
-                            <TrendingUp className="h-6 w-6 text-green-600" />
-                          ) : (
-                            <TrendingDown className="h-6 w-6 text-red-600" />
-                          )}
-                          <div>
-                            <p className="text-lg font-bold">EBITDA / LUCRO OPERACIONAL</p>
-                            <p className="text-sm text-muted-foreground">
-                              Margem: {dreData.margemEbitda.toFixed(1)}%
-                            </p>
-                          </div>
-                        </div>
-                        <p className={cn(
-                          "text-3xl font-bold",
-                          dreData.ebitda >= 0 ? "text-green-600" : "text-red-600"
-                        )}>
-                          {formatCurrency(dreData.ebitda)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <AdvancedDRE />
           </TabsContent>
 
-          {/* ==================== TAB B: RENTABILIDADE ==================== */}
+          {/* ==================== TAB B: RENTABILIDADE AVANÇADA ==================== */}
           <TabsContent value="rentabilidade" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Rentabilidade por Cliente
-                </CardTitle>
-                <CardDescription>
-                  Ordenado por menor margem — expondo quem dá prejuízo primeiro
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {sortedProfitability.length === 0 ? (
-                  <p className="text-center py-8 text-muted-foreground">
-                    Nenhum cliente cadastrado ainda.
-                  </p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Cliente</TableHead>
-                        <TableHead className="text-right">Receita</TableHead>
-                        <TableHead className="text-right">Custo Pessoal</TableHead>
-                        <TableHead className="text-right">Custos Diretos</TableHead>
-                        <TableHead className="text-right">Lucro</TableHead>
-                        <TableHead className="text-right">Margem</TableHead>
-                        <TableHead className="w-24">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedProfitability.map((client, index) => {
-                        const isNegative = client.margin < 0;
-                        const isLowMargin = client.margin < 20;
-                        
-                        return (
-                          <TableRow 
-                            key={client.clientId}
-                            className={cn(
-                              index < 3 && isLowMargin && "bg-red-50/50 dark:bg-red-950/30"
-                            )}
-                          >
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-2">
-                                {index < 3 && isLowMargin && (
-                                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                                )}
-                                {client.clientName}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatCurrency(client.revenue)}
-                            </TableCell>
-                            <TableCell className="text-right text-muted-foreground">
-                              {formatCurrency(client.laborCost)}
-                            </TableCell>
-                            <TableCell className="text-right text-muted-foreground">
-                              {formatCurrency(client.directCosts)}
-                            </TableCell>
-                            <TableCell className={cn(
-                              "text-right font-semibold",
-                              isNegative ? "text-red-600" : "text-green-600"
-                            )}>
-                              {formatCurrency(client.profit)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <span className={cn(
-                                "inline-flex items-center gap-1 font-bold",
-                                isLowMargin ? "text-red-600" : "text-green-600"
-                              )}>
-                                {client.margin < 0 ? (
-                                  <TrendingDown className="h-4 w-4" />
-                                ) : (
-                                  <TrendingUp className="h-4 w-4" />
-                                )}
-                                {client.margin.toFixed(1)}%
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              {isNegative ? (
-                                <Badge variant="destructive">Prejuízo</Badge>
-                              ) : isLowMargin ? (
-                                <Badge variant="secondary" className="bg-amber-100 text-amber-800">
-                                  Atenção
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                                  Saudável
-                                </Badge>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+            <AdvancedProfitability />
           </TabsContent>
 
           {/* ==================== TAB C: OPERACIONAL ==================== */}
