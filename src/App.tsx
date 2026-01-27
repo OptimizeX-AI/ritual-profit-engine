@@ -23,6 +23,7 @@ import Timesheet from "./pages/Timesheet";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
 import Capacidade from "./pages/Capacidade";
+import MeuPerfil from "./pages/MeuPerfil";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -133,6 +134,14 @@ const App = () => (
                   element={
                     <ProtectedRoute>
                       <Capacidade />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/meu-perfil"
+                  element={
+                    <ProtectedRoute>
+                      <MeuPerfil />
                     </ProtectedRoute>
                   }
                 />

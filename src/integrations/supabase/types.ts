@@ -306,30 +306,40 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           comissao_percentual: number | null
           created_at: string
           custo_hora_centavos: number | null
           id: string
+          member_function: Database["public"]["Enums"]["member_function"] | null
           name: string
           organization_id: string | null
           tipo_comissao: string | null
           weekly_capacity_hours: number | null
         }
         Insert: {
+          avatar_url?: string | null
           comissao_percentual?: number | null
           created_at?: string
           custo_hora_centavos?: number | null
           id: string
+          member_function?:
+            | Database["public"]["Enums"]["member_function"]
+            | null
           name: string
           organization_id?: string | null
           tipo_comissao?: string | null
           weekly_capacity_hours?: number | null
         }
         Update: {
+          avatar_url?: string | null
           comissao_percentual?: number | null
           created_at?: string
           custo_hora_centavos?: number | null
           id?: string
+          member_function?:
+            | Database["public"]["Enums"]["member_function"]
+            | null
           name?: string
           organization_id?: string | null
           tipo_comissao?: string | null
@@ -686,22 +696,35 @@ export type Database = {
     Views: {
       profiles_public: {
         Row: {
+          avatar_url: string | null
           created_at: string | null
           id: string | null
+          member_function: Database["public"]["Enums"]["member_function"] | null
           name: string | null
           organization_id: string | null
+          weekly_capacity_hours: number | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string | null
           id?: string | null
+          member_function?:
+            | Database["public"]["Enums"]["member_function"]
+            | null
           name?: string | null
           organization_id?: string | null
+          weekly_capacity_hours?: number | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string | null
           id?: string | null
+          member_function?:
+            | Database["public"]["Enums"]["member_function"]
+            | null
           name?: string | null
           organization_id?: string | null
+          weekly_capacity_hours?: number | null
         }
         Relationships: [
           {
@@ -719,7 +742,13 @@ export type Database = {
         Args: { deal_value: number; salesperson_id: string }
         Returns: number
       }
+      can_access_financeiro: { Args: { _user_id: string }; Returns: boolean }
+      can_access_warroom: { Args: { _user_id: string }; Returns: boolean }
       can_view_custo_hora: { Args: never; Returns: boolean }
+      get_member_function: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["member_function"]
+      }
       get_user_organization_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -740,6 +769,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      member_function: "assistente" | "closer" | "gestor" | "dono"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -868,6 +898,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      member_function: ["assistente", "closer", "gestor", "dono"],
     },
   },
 } as const

@@ -2,11 +2,16 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 
+export type MemberFunction = "assistente" | "closer" | "gestor" | "dono";
+
 interface Profile {
   id: string;
   organization_id: string | null;
   name: string;
   custo_hora_centavos: number | null;
+  member_function: MemberFunction | null;
+  avatar_url: string | null;
+  weekly_capacity_hours: number | null;
   created_at: string;
 }
 
@@ -30,6 +35,9 @@ interface OrganizationContextType {
   organization: Organization | null;
   roles: UserRole[];
   isAdmin: boolean;
+  memberFunction: MemberFunction;
+  canAccessFinanceiro: boolean;
+  canAccessWarRoom: boolean;
   loading: boolean;
   refetch: () => Promise<void>;
 }
@@ -93,10 +101,25 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const isAdmin = roles.some((r) => r.role === "admin");
+  const memberFunction: MemberFunction = profile?.member_function || "assistente";
+  
+  // Access control based on function
+  const canAccessFinanceiro = isAdmin || memberFunction === "gestor" || memberFunction === "dono";
+  const canAccessWarRoom = isAdmin || memberFunction === "closer" || memberFunction === "gestor" || memberFunction === "dono";
 
   return (
     <OrganizationContext.Provider
-      value={{ profile, organization, roles, isAdmin, loading, refetch: fetchData }}
+      value={{ 
+        profile, 
+        organization, 
+        roles, 
+        isAdmin, 
+        memberFunction,
+        canAccessFinanceiro,
+        canAccessWarRoom,
+        loading, 
+        refetch: fetchData 
+      }}
     >
       {children}
     </OrganizationContext.Provider>
