@@ -1,21 +1,29 @@
 
 
-# Reset de Senha para augusto_ccn@hotmail.com
+# Remover Badge "3" Mockado do CRM
 
-## O Que Sera Feito
+## Problema
+Na sidebar (`src/components/layout/Sidebar.tsx`), o item de navegacao do CRM possui um badge hardcoded com o valor "3" (linha 26):
+```
+{ title: "CRM", href: "/crm", icon: Target, badge: "3" }
+```
 
-Criar uma edge function temporaria que usa a Admin API para atualizar a senha do usuario `augusto_ccn@hotmail.com` para `Fvm2026@!`.
+## Solucao
 
-## Passos
+Remover a propriedade `badge: "3"` do item CRM no array `navItems`. O badge nao esta conectado a nenhum dado real -- e puramente mockado.
 
-1. **Criar edge function temporaria** `reset-password` que usa `supabase.auth.admin.updateUserById()` para definir a nova senha
-2. **Chamar a function** para executar o reset
-3. **Verificar** que o login funciona com as novas credenciais
-4. **Remover a edge function** apos o uso (nao deve ficar em producao)
+### Detalhes Tecnicos
 
-## Detalhes Tecnicos
+**Arquivo:** `src/components/layout/Sidebar.tsx`
 
-- A function usara a `SUPABASE_SERVICE_ROLE_KEY` (ja configurada) para ter permissao de admin
-- Primeiro busca o usuario pelo email, depois atualiza a senha
-- Apos confirmar que funciona, a function sera deletada por seguranca
+Alterar a linha 26 de:
+```typescript
+{ title: "CRM", href: "/crm", icon: Target, badge: "3", onboardingId: "nav-crm" },
+```
+Para:
+```typescript
+{ title: "CRM", href: "/crm", icon: Target, onboardingId: "nav-crm" },
+```
+
+Isso remove o numero "3" que aparece ao lado do texto "CRM" na sidebar. Nenhum outro arquivo precisa ser alterado.
 
