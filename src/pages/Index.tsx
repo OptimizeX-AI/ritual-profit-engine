@@ -47,7 +47,7 @@ const Index = () => {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight">Dashboard Executivo</h1>
           <p className="text-muted-foreground">
-            {organization?.name || "Sua Agência"} - Janeiro 2026
+            {organization?.name || "Sua Agência"}
           </p>
         </div>
 
