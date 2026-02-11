@@ -23,7 +23,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
   { title: "War Room", href: "/war-room", icon: Swords, adminOnly: true, onboardingId: "nav-warroom" },
-  { title: "CRM", href: "/crm", icon: Target, badge: "3", onboardingId: "nav-crm" },
+  { title: "CRM", href: "/crm", icon: Target, onboardingId: "nav-crm" },
   { title: "Clientes", href: "/clientes", icon: Building2 },
   { title: "Projetos", href: "/projetos", icon: FolderKanban, onboardingId: "nav-projetos" },
   { title: "Bíblia", href: "/tarefas", icon: BookOpen, onboardingId: "nav-tarefas" },
