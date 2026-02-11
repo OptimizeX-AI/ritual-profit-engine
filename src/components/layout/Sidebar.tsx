@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, FolderKanban, DollarSign, Target, Settings, ChevronLeft, BookOpen, Clock, BarChart3, Building2, LogOut, Swords, Gauge, HelpCircle, UserCircle } from "lucide-react";
+import { LayoutDashboard, Users, FolderKanban, DollarSign, Target, Settings, ChevronLeft, BookOpen, Clock, BarChart3, Building2, LogOut, Swords, Gauge, HelpCircle, UserCircle, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoPvm from "@/assets/logo-pvm.jpeg";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +32,7 @@ const navItems: NavItem[] = [
   { title: "Financeiro", href: "/financeiro", icon: DollarSign, adminOnly: true, onboardingId: "nav-financeiro" },
   { title: "Relatórios", href: "/relatorios", icon: BarChart3, adminOnly: true },
   { title: "Equipe", href: "/settings/team", icon: Users, adminOnly: true },
+  { title: "Curso", href: "/curso", icon: GraduationCap },
   { title: "Configurações", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
 
