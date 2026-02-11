@@ -99,7 +99,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">ERP Gestão Agência</CardTitle>
+          <CardTitle className="text-2xl font-bold">ERP Gestão FVM</CardTitle>
           <CardDescription>
             Sistema de gestão baseado no Método Lázaro do Carmo
           </CardDescription>
